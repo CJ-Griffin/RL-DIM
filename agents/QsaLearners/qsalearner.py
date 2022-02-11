@@ -10,7 +10,8 @@ from agents.QsaLearners.replay_buffer import ReplayBuffer
 
 
 class QsaLearner(Agent):
-    NEEDS_TRAINING = True
+    REQUIRES_TRAINING = True
+    REQUIRES_FINITE_ACTION_SPACE = True
 
     # A generalisation of Q-learners (which explicitly learn off-policy)
     def __init__(self,

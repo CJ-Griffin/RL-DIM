@@ -32,6 +32,8 @@ class DNN(torch.nn.Module):
 
 
 class DQN(QsaLearner):
+    REQUIRES_FINITE_STATE_SPACE = False
+
     # TODO - address categorical spaces and one-hot encodings
     def __init__(self,
                  action_space: gym.Space,

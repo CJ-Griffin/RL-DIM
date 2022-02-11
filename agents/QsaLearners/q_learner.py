@@ -4,6 +4,8 @@ from agents.QsaLearners.qsalearner import QsaLearner
 
 
 class QLearner(QsaLearner):
+    REQUIRES_FINITE_STATE_SPACE = True
+
     def __init__(self,
                  action_space: gym.Space,
                  state_space: gym.Space,

@@ -10,7 +10,9 @@ from agents.QsaLearners.replay_buffer import ReplayBuffer
 
 
 class BlackjackAgent(Agent):
-    NEEDS_TRAINING = False
+    REQUIRES_TRAINING = False
+    REQUIRES_FINITE_STATE_SPACE = True
+    REQUIRES_FINITE_ACTION_SPACE = True
 
     def act(self, state):
         if state[0] < 16:

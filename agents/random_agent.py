@@ -3,6 +3,9 @@ from agents.agent import Agent
 
 
 class RandomAgent(Agent):
+    REQUIRES_TRAINING = False
+    REQUIRES_FINITE_STATE_SPACE = False
+    REQUIRES_FINITE_ACTION_SPACE = False
 
     def act(self, state):
         # assert (state in self._state_space), (state, self._state_space)
