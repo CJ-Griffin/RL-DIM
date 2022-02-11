@@ -51,13 +51,3 @@ class SARSA(QsaLearner):
             td_error = r + (self._gamma * next_q) - self._Q[s][a]
             self._Q[s][a] += self._alpha * td_error
 
-    def render(self):
-        str_out = "\n------------------------ \n"
-        str_out += "SARSA - Q(s,a)=... \n"
-        for state in self._Q.keys():
-            str_out += f" | state = {state}\n"
-            for action in self._allowed_actions:
-                str_out += f" |    | {action} : {self._Q[state][action]}\n"
-        # print(self._Q_count)
-        str_out += "------------------------\n"
-        print(str_out)

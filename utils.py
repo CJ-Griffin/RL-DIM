@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+
 import gym
 
 
@@ -39,3 +41,14 @@ def get_action_list(action_space: gym.Space):
         return list(range(start, start + action_space.n))
     else:
         raise NotImplementedError
+
+
+def vectorise_state(state: gym.core.ActType) -> torch.Tensor:
+    if isinstance(state, int) :
+        return torch.tensor([state])
+    elif isinstance(state, tuple):
+        return torch.tensor(state)
+    else:
+        raise NotImplementedError(state)
+
+

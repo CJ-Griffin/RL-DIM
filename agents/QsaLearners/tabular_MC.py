@@ -6,6 +6,9 @@ import gym
 from utils import is_space_finite
 from agents.QsaLearners.qsalearner import QsaLearner
 
+# TODO Consider reworking s.t. there is a TabularQsa class
+#       containing all learners that use dictionaries (_Q)
+
 
 class TabularMC(QsaLearner):
 
@@ -69,14 +72,3 @@ class TabularMC(QsaLearner):
                 self._Q_count[state][action] += 1
                 prev = float(self._Q[state][action])
                 self._Q[state][action] += (ret - prev) / (n + 1)
-
-    def render(self):
-        str_out = "\n------------------------ \n"
-        str_out += "Monte Carlo - Q(s,a)=... \n"
-        for state in self._Q.keys():
-            str_out += f" | state = {state}\n"
-            for action in self._allowed_actions:
-                str_out += f" |    | {action} : {self._Q[state][action]}\n"
-        # print(self._Q_count)
-        str_out += "------------------------\n"
-        print(str_out)

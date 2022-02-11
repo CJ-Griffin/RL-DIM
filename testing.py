@@ -1,35 +1,52 @@
 import os
+from argparse import ArgumentParser
 from datetime import datetime
 import numpy as np
 
-import custom_envs.bandit_env
+from custom_envs.bandit_env import BanditEnv
 import gym
 from running import run
 from agents import *
 from torch.utils.tensorboard import SummaryWriter
+# from gooey import Gooey
 
 env_to_train_ep_num = {
-    "bandit": (custom_envs.bandit_env.BanditEnv(), int(1e1)),
-    "blackjack": (gym.make("Blackjack-v1"), int(1e5)),
-    "frozen": (gym.make("FrozenLake-v1"), int(1e6)),
+    "bandit": (BanditEnv(), int(1e3)),
+    "blackjack": (gym.make("Blackjack-v1"), int(1e7)),
+    "frozen": (gym.make("FrozenLake-v1"), int(1e5)),
     "taxi": (gym.make("Taxi-v3"), int(1e5))
 }
 
-if __name__ == "__main__":
+# @Gooey
+def main():
+    parser = ArgumentParser(description="Run RL experiments")
+
+    parser.add_argument("--env_name", type=str,
+                        default="bandit",
+                        choices=env_to_train_ep_num.keys(),
+                        help="The name of the game to train on")
+
+    parser.add_argument("-e", "--episodes", type=int,
+                        default=None,
+                        help="How many episodes to train for")
+    args = parser.parse_args()
+
     print("Available evs: " + str(list(gym.envs.registry.env_specs)))
     env_names = list(env_to_train_ep_num.keys())
-    env_name = "0" # input(f"Which env to run? {list(enumerate(env_names))}")
+    env_name = args.env_name # input(f"Which env to run? {list(enumerate(env_names))}")
     if env_name.isdigit():
         env_name = env_names[int(env_name)]
     print(f"Running {env_name}")
     env, num_train_eps = env_to_train_ep_num[env_name]
+    if args.episodes is not None:
+        num_train_eps = args.episodes
 
     agent_dict = {
         "rand": RandomAgent(env.action_space, env.observation_space),
         "MC": TabularMC(env.action_space, env.observation_space, gamma=1.0),
-        "SARSA": SARSA(env.action_space, env.observation_space),
-        "QLearner": QLearner(env.action_space, env.observation_space),
-        # "DQN": DQN(env.action_space, env.observation_space)
+        # "SARSA": SARSA(env.action_space, env.observation_space),
+        # "QLearner": QLearner(env.action_space, env.observation_space),
+        "DQN": DQN(env.action_space, env.observation_space)
     }
     if env_name == "blackjack":
         agent_dict["GOFAI"] = BlackjackAgent(env.action_space, env.observation_space)
@@ -50,3 +67,7 @@ if __name__ == "__main__":
         agent.render()
 
     print(scores)
+
+
+if __name__ == "__main__":
+    main()

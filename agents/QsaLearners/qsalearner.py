@@ -59,3 +59,21 @@ class QsaLearner(Agent):
     @abstractmethod
     def update(self):
         pass
+
+    def render(self):
+        str_out = "\n------------------------ \n"
+        str_out += f"{self.__class__.__name__} - Q(s,a)=... \n"
+        Q_string = self._Q_to_string()
+        if len(Q_string.split("\n")) >= 10:
+            Q_string = "\n".join(Q_string.split("\n")[:5])+"\n ... \n"
+        str_out += Q_string
+        str_out += "------------------------\n"
+        print(str_out)
+
+    def _Q_to_string(self):
+        str_out = ""
+        for state in self._Q.keys():
+            str_out += f" | state = {state}\n"
+            for action in self._allowed_actions:
+                str_out += f" |    | {action} : {self._Q[state][action]}\n"
+        return str_out
