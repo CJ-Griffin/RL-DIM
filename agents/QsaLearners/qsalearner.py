@@ -1,7 +1,8 @@
+import collections
 from random import random
 
 import numpy as np
-
+import xxhash
 from agents.agent import Agent
 import gym
 from utils import is_space_finite, get_action_list
@@ -21,29 +22,49 @@ class QsaLearner(Agent):
                  buffer_size: int = 100,
                  batch_size: int = 100,
                  update_freq: int = 100,
-                 gamma: float = 0.99):
-        super().__init__(action_space, state_space)
+                 gamma: float = 0.99,
+                 debug_mode: bool = False):
+        super().__init__(action_space, state_space, debug_mode=debug_mode)
         assert (is_space_finite(action_space)), action_space
         assert (is_space_finite(state_space)), state_space
         self._epsilon = epsilon
         self._update_freq = update_freq
         self._gamma = gamma
         self._allowed_actions = get_action_list(self._action_space)
+        self._buffer_size = buffer_size
+        self._batch_size = batch_size
         self._memory = ReplayBuffer(buffer_size=buffer_size,
                                     batch_size=batch_size)
+        self._state_hasher = xxhash.xxh64()
 
     def act(self, state):
-        # is_epsilon_greedy: bool = True, # Want to keep act method generic
-        # is_greedy: bool = False):
         assert state in self._state_space, (state, self._state_space)
-        # assert not is_greedy and is_epsilon_greedy, "Can't be both greedy and epsilon greedy!"
-        # if is_epsilon_greedy:
-        #     return self._epsilon_greedy_act(state)
+
         self._init_Q_s(state)
         if 1 == np.random.binomial(1, self._epsilon):
             return self._action_space.sample()
         else:
             return self.get_greedy_action(state)
+
+    def get_hashable_state(self, state):
+        if not isinstance(state, collections.Hashable):
+            # If the state is mutable, hash it instead
+            if isinstance(state, np.ndarray):
+                # check whether it is a 1D, small shape
+                # if state.size in list(range(10)):
+                #     print(state)
+                #     print(state.shape)
+                #     state = tuple(list(state))
+                #     print(state)
+                # else:
+                self._state_hasher.reset()
+                self._state_hasher.update(state)
+                state = self._state_hasher.digest()
+                self._state_hasher.reset()
+            else:
+                raise NotImplementedError(state)
+        return state
+
 
     @abstractmethod
     def get_greedy_action(self, state):

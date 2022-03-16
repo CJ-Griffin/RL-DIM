@@ -1,3 +1,6 @@
 [submodule "gym"]
 	path = gym
 	url = https://github.com/openai/gym
+[submodule "gym_grids"]
+	path = gym_grids
+	url = https://github.com/maximecb/gym-minigrid.git

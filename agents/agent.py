@@ -5,10 +5,11 @@ from utils import is_space_finite
 
 class Agent(ABC):
 
-    def __init__(self, action_space: gym.Space, state_space: gym.Space):
+    def __init__(self, action_space: gym.Space, state_space: gym.Space, debug_mode=False):
         self.check_compatibility(action_space=action_space, state_space=state_space)
         self._action_space = action_space
         self._state_space = state_space
+        self._debug_mode = debug_mode
 
     @abstractmethod
     def act(self, state):

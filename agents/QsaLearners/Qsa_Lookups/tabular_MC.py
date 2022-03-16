@@ -5,45 +5,14 @@ from agents.agent import Agent
 import gym
 from utils import is_space_finite
 from agents.QsaLearners.qsalearner import QsaLearner
-
-# TODO Consider reworking s.t. there is a TabularQsa class
-#       containing all learners that use dictionaries (_Q)
+from agents.QsaLearners.Qsa_Lookups.lookup_learner import LookupLearner
 
 
-class TabularMC(QsaLearner):
+class TabularMC(LookupLearner):
     REQUIRES_FINITE_STATE_SPACE = True
 
-    def __init__(self,
-                 action_space: gym.Space,
-                 state_space: gym.Space,
-                 epsilon: float = 0.05,
-                 gamma: float = 0.9):
-        super().__init__(action_space=action_space,
-                         state_space=state_space,
-                         epsilon=epsilon,
-                         gamma=gamma,
-                         buffer_size=int(1e6))
-        self._Q = {}
-        self._Q_count = {}
-
-    def _init_Q_s(self, state):
-        # state = torch.tensor(state)
-        if state not in self._Q:
-            self._Q[state] = {action: 0.0 for action in self._allowed_actions}
-            self._Q_count[state] = {action: 0 for action in self._allowed_actions}
-
-    def get_greedy_action(self, state):
-        # state = torch.tensor(state)
-        action_dict = self._Q[state]
-        action = max(action_dict, key=action_dict.get)
-        return action
-
-    def step(self, state, action, reward: float, next_state, done: bool):
-        self._memory.add(state, action, reward, next_state, done)
-        if done:
-            self.update()
-        # if self.t % self._update_freq == 0 and len(self._memory) > self.batch_size:
-        #     self.update()
+    def should_update(self, done: bool) -> bool:
+        return done
 
     # To be called only when self._memory has > self._batch_size items
     def update(self):
@@ -63,7 +32,7 @@ class TabularMC(QsaLearner):
         seen = []
 
         for t in range(T):
-            state = (states[t])
+            state = self.get_hashable_state(states[t])
             action = (actions[t])
             if True:  # (state, action) not in seen
                 seen.append((state, action))
