@@ -5,6 +5,7 @@ import numpy as np
 import xxhash
 from agents.agent import Agent
 import gym
+from running.run_parameters import TrainParams
 from utils import is_space_finite, get_action_list
 from abc import abstractmethod
 from agents.QsaLearners.replay_buffer import ReplayBuffer
@@ -15,26 +16,18 @@ class QsaLearner(Agent):
     REQUIRES_FINITE_ACTION_SPACE = True
 
     # A generalisation of Q-learners (which explicitly learn off-policy)
-    def __init__(self,
-                 action_space: gym.Space,
-                 state_space: gym.Space,
-                 epsilon: float = 0.05,
-                 buffer_size: int = 100,
-                 batch_size: int = 100,
-                 update_freq: int = 100,
-                 gamma: float = 0.99,
-                 debug_mode: bool = False):
-        super().__init__(action_space, state_space, debug_mode=debug_mode)
-        assert (is_space_finite(action_space)), action_space
-        assert (is_space_finite(state_space)), state_space
-        self._epsilon = epsilon
-        self._update_freq = update_freq
-        self._gamma = gamma
+
+    def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
+        super().__init__(action_space, state_space, params)
+        self._epsilon: float = params.epsilon
+        self._update_freq: int = params.update_freq
+        self._gamma: float = params.gamma
+        self._buffer_size: int = params.buffer_size
+        self._batch_size: int = params.batch_size
+
         self._allowed_actions = get_action_list(self._action_space)
-        self._buffer_size = buffer_size
-        self._batch_size = batch_size
-        self._memory = ReplayBuffer(buffer_size=buffer_size,
-                                    batch_size=batch_size)
+        self._memory = ReplayBuffer(buffer_size=self._buffer_size,
+                                    batch_size=self._batch_size)
         self._state_hasher = xxhash.xxh64()
 
     def act(self, state):
@@ -83,12 +76,15 @@ class QsaLearner(Agent):
         pass
 
     def render(self):
+        # print(self._unique_ID)
+        # print(self._memory.memory)
         str_out = "\n------------------------ \n"
         str_out += f"{self.__class__.__name__} - Q(s,a)=... \n"
         Q_string = self._Q_to_string()
         if len(Q_string.split("\n")) >= 10:
             Q_string = "\n".join(Q_string.split("\n")[:5])+"\n ... \n"
         str_out += Q_string
+        str_out += f"\nID = {self._unique_ID}\n"
         str_out += "------------------------\n"
         print(str_out)
 

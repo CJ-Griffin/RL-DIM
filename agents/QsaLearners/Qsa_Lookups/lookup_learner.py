@@ -1,44 +1,25 @@
 import gym
 from agents.agent import Agent
 from agents.QsaLearners.qsalearner import QsaLearner
+from running.run_parameters import TrainParams
 
 
 class LookupLearner(QsaLearner):
     REQUIRES_FINITE_STATE_SPACE = True
-    _Q = {}
-    _Q_count = {}
-    _Q_hash_dict = {}
 
-    def __init__(self,
-                 action_space: gym.Space,
-                 state_space: gym.Space,
-                 epsilon: float = 0.05,
-                 buffer_size: int = 100,
-                 batch_size: int = 100,
-                 update_freq: int = 100,
-                 gamma: float = 0.99,
-                 q_init: float = 2.0,
-                 alpha: float = 0.1,
-                 debug_mode: bool = False):
-
-        super().__init__(action_space,
-                         state_space,
-                         epsilon,
-                         buffer_size,
-                         batch_size,
-                         update_freq,
-                         gamma,
-                         debug_mode=debug_mode)
-        self._alpha: float = alpha
-        self._q_init: float = q_init
+    def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
+        super().__init__(action_space, state_space, params)
+        self._alpha: float = params.alpha
+        self._q_init: float = params.q_init
+        self._Q = {}
+        self._Q_count = {}
+        self._Q_hash_dict = {}
 
     def _init_Q_s(self, state):
-        if self._debug_mode:
-            new_state = self.get_hashable_state(state)
+        new_state = self.get_hashable_state(state)
+        if self._should_debug:
             self._Q_hash_dict[new_state] = state
-            state = new_state
-        else:
-            state = self.get_hashable_state(state)
+        state = new_state
         if state not in self._Q:
             self._Q[state] = {action: self._q_init for action in self._allowed_actions}
             self._Q_count[state] = {action: 0 for action in self._allowed_actions}
@@ -59,6 +40,7 @@ class LookupLearner(QsaLearner):
              reward: float,
              next_state,
              done: bool):
+        # print(self._Q, self._unique_ID)
         state = self.get_hashable_state(state)
         next_state = self.get_hashable_state(next_state)
         self._memory.add(state, action, reward, next_state, done)

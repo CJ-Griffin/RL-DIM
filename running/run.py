@@ -49,6 +49,8 @@ def run_episodic(agent: Agent,
                  should_show_prog_bar: bool = True,
                  # uncertainty_writers=None,
                  should_eval=True):
+    env.render()
+    agent.render()
     prev_steps = 0
     if not should_show_prog_bar:
         ep_iter = range(num_episodes)

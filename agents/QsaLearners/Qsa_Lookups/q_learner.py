@@ -5,6 +5,7 @@ import gym
 from agents.QsaLearners.Qsa_Lookups.lookup_learner import LookupLearner
 from utils import imshow_grid
 
+
 class QLearner(LookupLearner):
 
     def should_update(self, done: bool) -> bool:
@@ -15,7 +16,7 @@ class QLearner(LookupLearner):
 
         for i, (s, a, r, sn, d) in enumerate(zip(states, actions, rewards, next_states, dones)):
             if not d and i != self._batch_size -1:
-                if self._is_debug_mode:
+                if self._should_debug:
                     try:
                         next_qs = self._Q[sn]
                     except KeyError as e:

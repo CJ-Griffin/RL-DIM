@@ -1,44 +1,36 @@
 from agents.QsaLearners.qsalearner import QsaLearner
-from agents.networks import DNN
+from agents.networks import DNN, CNN
+from running.run_parameters import TrainParams
 from utils import *
 
 
 class DQN(QsaLearner):
     REQUIRES_FINITE_STATE_SPACE = False
+    NETWORK_CLASS = DNN
 
-    def __init__(self,
-                 action_space: gym.Space,
-                 state_space: gym.Space,
-                 alpha: float = 0.1,
-                 epsilon: float = 0.05,
-                 buffer_size: int = 1000,
-                 batch_size: int = 100,
-                 update_freq: int = 100,
-                 gamma: float = 0.99,
-                 # is_state_one_hot: bool = False,
-                 # is_action_one_hot: bool = False,
-                 learning_rate: float = 1e-4,
-                 debug_mode: bool = False
-                 ):
-        super().__init__(action_space, state_space, epsilon, buffer_size, batch_size, update_freq, gamma, debug_mode=debug_mode)
-        self._alpha = alpha
-        self._batch_size = batch_size
-        self._buffer_size = buffer_size
+    def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
+        super().__init__(action_space, state_space, params)
+        self._alpha = params.alpha
+        self._batch_size = params.batch_size
+        self._buffer_size = params.buffer_size
 
-        self._Q_net = DNN(state_space=state_space, action_space=action_space)
-        self.optimiser = torch.optim.Adam(self._Q_net.parameters(), lr=learning_rate)
+        self._Q_net = self.NETWORK_CLASS(state_space=self._state_space, action_space=self._action_space)
+        self.optimiser = torch.optim.Adam(self._Q_net.parameters(), lr=params.learning_rate)
         self.loss = torch.nn.MSELoss()
 
     def _init_Q_s(self, state):
         pass
 
     def get_greedy_action(self, state):
-        state = vectorise_state(state)
+        if self.NETWORK_CLASS == DNN:
+            state = vectorise_state(state)
+        elif self.NETWORK_CLASS == CNN:
+            state = imageify_state(state)
         x = (torch.tensor(state)).float()
         if x.shape == torch.Size([]):
             x = x.reshape(1)
         Qs = self._Q_net(x)
-        if self._debug_mode:
+        if self._should_debug:
             p = 1e-3
             if np.random.choice([True, False], p=[p, 1.0-p]):
                 print(f"Q({state}) = {Qs}")
@@ -51,8 +43,12 @@ class DQN(QsaLearner):
              reward: float,
              next_state,
              done: bool):
-        state = vectorise_state(state)
-        next_state = vectorise_state(next_state)
+        if self.NETWORK_CLASS == DNN:
+            state = vectorise_state(state)
+            next_state = vectorise_state(next_state)
+        elif self.NETWORK_CLASS == CNN:
+            state = imageify_state(state)
+            next_state = imageify_state(next_state)
         self._memory.add(state, action, reward, next_state, done)
         if len(self._memory) >= self._batch_size:
             self.update()
@@ -71,7 +67,7 @@ class DQN(QsaLearner):
         prevs_0 = self._Q_net(states)[torch.arange(len(states)), :]
         prevs = self._Q_net(states)[torch.arange(len(states)), actions.flatten()]
         loss = self.loss(targets, prevs)
-        if self._debug_mode:
+        if self._should_debug:
             self.debug_print(Q_next_states, actions, dones, prevs, prevs_0, rewards, states, targets)
         loss.backward()
         self.optimiser.step()
@@ -80,7 +76,10 @@ class DQN(QsaLearner):
         p = 1e-1
         if np.random.choice([True, False], p=[p, 1.0 - p]):
             for i in range(len(states)):
-                print(states[i].view(3, -1))
+                if states[i].shape[0] >= 3:
+                    print(states[i].view(3, -1))
+                else:
+                    print(states[i])
                 print(actions[i])
                 print(rewards[i])
                 print(Q_next_states[i])
@@ -96,3 +95,7 @@ class DQN(QsaLearner):
 
     def _Q_to_string(self):
         return str(self._Q_net)
+
+
+class DQN_CNN(DQN):
+    NETWORK_CLASS = CNN

@@ -1,8 +1,10 @@
 import gym
 from agents.agent import Agent
+from running.run_parameters import TrainParams
 
 
 class RandomAgent(Agent):
+
     REQUIRES_TRAINING = False
     REQUIRES_FINITE_STATE_SPACE = False
     REQUIRES_FINITE_ACTION_SPACE = False
@@ -19,3 +21,6 @@ class RandomAgent(Agent):
 
     def render(self):
         print("RandomAgent over space: " + str(self._action_space))
+
+    def init_hyperparams(self, params: TrainParams):
+        pass

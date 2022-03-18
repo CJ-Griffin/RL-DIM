@@ -60,14 +60,16 @@ class CNN(torch.nn.Module):
         super().__init__()
         # Draw a sample from state space, turn it into a vector
         # its dimension will be the shape of the state space
-        self.in_size = imageify_state(state_space.sample())
+        # self.in_size = imageify_state(state_space.sample()).shape[1:]
+        # print(self.in_size, "="*100)
         self.action_list = get_action_list(action_space)
         self.out_size = len(self.action_list)
+
         self.convs = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels=3, out_channels=4, kernel_size=2),
             torch.nn.MaxPool2d(2, 2),
             torch.nn.Conv2d(in_channels=4, out_channels=5, kernel_size=2),
-            torch.nn.MaxPool2d(2, 2),
+            # torch.nn.MaxPool2d(2, 2),
             torch.nn.Flatten()
         )
         self.dense = torch.nn.Sequential(

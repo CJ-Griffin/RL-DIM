@@ -3,7 +3,6 @@ from dataclasses import dataclass, asdict
 import sys
 
 import agents
-import def_params
 import custom_envs
 
 
@@ -12,14 +11,14 @@ class TrainParams:
     env_name: str
     agent_name: str
     num_episodes: int
-    gamma: int
-    alpha: float = None
-    epsilon: float = None
-    buffer_size: int = None
-    batch_size: int = None
-    update_freq: int = None
-    q_init: float = None
-    learning_rate: float = None
+    gamma: float
+    alpha: float = 0.8
+    epsilon: float = 0.05
+    buffer_size: int = int(1e4)
+    batch_size: int = 100
+    update_freq: int = 10
+    q_init: float = 0.0
+    learning_rate: float = 0.01
     should_debug: bool = False
     should_render: bool = False
     should_profile: bool = False
@@ -30,7 +29,7 @@ class TrainParams:
     def validate(self):
         # Imperfect but works
         assert(self.env_name in dir(custom_envs)), f"{self.env_name} not in {dir(custom_envs)}"
-        assert(self.agent_name in dir(agents)), f"{self.agent_name} not in {dir(agents)}"
+        # assert(self.agent_name in dir(agents)), f"{self.agent_name} not in {dir(agents)}"
 
     def __str__(self):
         return str(self.get_dict())
