@@ -8,14 +8,12 @@ import numpy as np
 class CoinsEnv(gym.Env):
 
     def __init__(self,
-                 ps: list = np.random.uniform(0, 1, size=(2,3)),
+                 ps: list = np.random.uniform(0, 1, size=(2, 3)),
                  maxtime: int = 10):
-
         self._ps = ps
 
         self._timestep = 0
         self._maxtime = maxtime
-
 
         self.action_space = gym.spaces.Discrete(3)
         self.observation_space = gym.spaces.Discrete(1)
@@ -40,5 +38,5 @@ ps:{self._ps}
         if done:
             self._timestep = 0
         p = self._ps[self._state][action]
-        reward = np.random.choice([0,1], p=[1-p, p])
+        reward = np.random.choice([0, 1], p=[1 - p, p])
         return 0, reward, done, {}

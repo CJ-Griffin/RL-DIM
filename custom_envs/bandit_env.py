@@ -10,8 +10,7 @@ class BanditEnv(gym.Env):
     def __init__(self,
                  means: list = [-1, 0, 1],
                  variance: float = 1,
-                 maxtime: int = 100):
-
+                 maxtime: int = 1):
         self._means = means
         self._variance = variance
 
@@ -19,7 +18,7 @@ class BanditEnv(gym.Env):
         self._maxtime = maxtime
 
         self.action_space = gym.spaces.Discrete(3)
-        self.observation_space = gym.spaces.Discrete(1)
+        self.observation_space = gym.spaces.Discrete(1, start=1)
 
     def render(self, mode="human"):
         print(f"""
@@ -32,25 +31,24 @@ variance:{self._variance}
         print()
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> ObsType:
-        return 0
+        return 1
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         self._timestep += 1
-        done = self._timestep > self._maxtime
+        done = self._timestep >= self._maxtime
         if done:
             self._timestep = 0
 
         reward = np.random.normal(self._means[action], np.sqrt(self._variance))
-        return 0, reward, done, {}
+        return 1, reward, done, {}
 
 
 class NonStationaryBanditEnv(BanditEnv):
 
     def __init__(self,
-                 means: list = [[-1, 0, 1], [2,0,-2]],
+                 means: list = [[-1, 0, 1], [2, 0, -2]],
                  variance: float = 1,
                  maxtime: int = 100):
-
         self._means = means
         self._variance = variance
 
@@ -72,7 +70,7 @@ variance:{self._variance}
         print()
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> ObsType:
-        return 0
+        return 1
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         self._timestep += 1
@@ -82,4 +80,4 @@ variance:{self._variance}
 
         reward = np.random.normal(self._means[self._state][action], np.sqrt(self._variance))
         self._state = self.observation_space.sample()
-        return 0, reward, done, {}
+        return 1, reward, done, {}

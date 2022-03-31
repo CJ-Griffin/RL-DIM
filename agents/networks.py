@@ -14,13 +14,13 @@ class BDNN(torch.nn.Module):
 
         # Taken from github
         const_bnn_prior_parameters = {
-                "prior_mu": 0,
-                "prior_sigma": 2.0,
-                "posterior_mu_init": 0.0,
-                "posterior_rho_init": 1.0,
-                "type": "Reparameterization",  # Flipout or Reparameterization
-                "moped_enable": False,  # True to initialize mu/sigma from the pretrained dnn weights
-                "moped_delta": 0.5,
+            "prior_mu": 0,
+            "prior_sigma": 2.0,
+            "posterior_mu_init": 0.0,
+            "posterior_rho_init": 1.0,
+            "type": "Reparameterization",  # Flipout or Reparameterization
+            "moped_enable": False,  # True to initialize mu/sigma from the pretrained dnn weights
+            "moped_delta": 0.5,
         }
 
         dnn_to_bnn(self._m, const_bnn_prior_parameters)
@@ -43,9 +43,9 @@ class DNN(torch.nn.Module):
         self.action_list = get_action_list(action_space)
         self.out_size = len(self.action_list)
         self.dense = torch.nn.Sequential(
-            torch.nn.Linear(self.in_size, 30),
+            torch.nn.Linear(self.in_size, 60),
             torch.nn.ReLU(),
-            torch.nn.Linear(30, 30),
+            torch.nn.Linear(60, 30),
             torch.nn.ReLU(),
             torch.nn.Linear(30, self.out_size),
             torch.nn.ReLU()
@@ -56,22 +56,30 @@ class DNN(torch.nn.Module):
 
 
 class CNN(torch.nn.Module):
-    def  __init__(self, state_space: gym.Space, action_space: gym.Space):
+    def __init__(self, state_space: gym.Space, action_space: gym.Space):
         super().__init__()
         # Draw a sample from state space, turn it into a vector
         # its dimension will be the shape of the state space
-        # self.in_size = imageify_state(state_space.sample()).shape[1:]
-        # print(self.in_size, "="*100)
+        self.in_size = imageify_state(state_space.sample()).shape[1:]
+        print(self.in_size, "="*100)
+
         self.action_list = get_action_list(action_space)
         self.out_size = len(self.action_list)
 
-        self.convs = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=3, out_channels=4, kernel_size=2),
-            torch.nn.MaxPool2d(2, 2),
-            torch.nn.Conv2d(in_channels=4, out_channels=5, kernel_size=2),
-            # torch.nn.MaxPool2d(2, 2),
-            torch.nn.Flatten()
-        )
+        if self.in_size[0] <= 6 or self.in_size[0] <= 6:
+            self.convs = torch.nn.Sequential(
+                torch.nn.Conv2d(in_channels=3, out_channels=4, kernel_size=2),
+                torch.nn.MaxPool2d(2, 2),
+                torch.nn.Flatten()
+            )
+        else:
+            self.convs = torch.nn.Sequential(
+                torch.nn.Conv2d(in_channels=3, out_channels=4, kernel_size=2),
+                torch.nn.MaxPool2d(2, 2),
+                torch.nn.Conv2d(in_channels=4, out_channels=5, kernel_size=2),
+                # torch.nn.MaxPool2d(2, 2),
+                torch.nn.Flatten()
+            )
         self.dense = torch.nn.Sequential(
             torch.nn.LazyLinear(out_features=20),
             torch.nn.ReLU(),

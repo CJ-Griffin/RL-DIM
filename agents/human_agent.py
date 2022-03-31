@@ -14,10 +14,17 @@ class HumanAgent(Agent):
             "d": 1,
             "s": 2,
             "a": 3,
+            "e": 4,
             "0": 0,
             "1": 1,
             "2": 2,
-            "3": 3
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9
         }
         key = None
         while key not in key_dict:
@@ -27,6 +34,7 @@ class HumanAgent(Agent):
         return action
 
     def step(self, state, action, reward: float, next_state, done: bool):
+        print(f"Action {action} got reward {reward}")
         pass
 
     def update(self):

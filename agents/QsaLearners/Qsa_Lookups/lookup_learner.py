@@ -52,4 +52,3 @@ class LookupLearner(QsaLearner):
 
     def should_update(self, done: bool) -> bool:
         raise NotImplementedError
-

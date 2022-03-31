@@ -57,6 +57,6 @@ class Agent(ABC):
 
     def check_compatibility(self, action_space: gym.Space, state_space: gym.Space):
         if self.REQUIRES_FINITE_ACTION_SPACE and not is_space_finite(action_space):
-            raise Exception(f"Model ({self}) is not compatible with infinite action space ({action_space})" )
+            raise Exception(f"Model ({self}) is not compatible with infinite action space ({action_space})")
         elif self.REQUIRES_FINITE_STATE_SPACE and not is_space_finite(state_space):
-            raise Exception(f"Model ({self}) is not compatible with infinite state space ({state_space})" )
+            raise Exception(f"Model ({self}) is not compatible with infinite state space ({state_space})")

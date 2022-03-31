@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
@@ -8,8 +10,8 @@ import gym
 def imshow_grid(grid: np.ndarray):
     if len(grid.shape) == 3 and 3 in grid.shape:
         if grid.shape[0] == 3:
-            grid2 = np.swapaxes(grid*255,0,2)
-            grid3 = np.swapaxes(grid2,0,1)
+            grid2 = np.swapaxes(grid * 255, 0, 2)
+            grid3 = np.swapaxes(grid2, 0, 1)
             plt.imshow(grid3)
             plt.show()
         else:
@@ -19,7 +21,6 @@ def imshow_grid(grid: np.ndarray):
 
 
 def is_space_finite(space: gym.Space) -> bool:
-
     known_simple_finite_spaces = [
         gym.spaces.Discrete,
         gym.spaces.MultiDiscrete,
@@ -92,12 +93,16 @@ def vectorise_state(state: gym.core.ActType) -> torch.Tensor:
         #     return vectorise_state(state['image'])
         # else:
         #     raise NotImplementedError(state)
+    elif isinstance(state, torch.Tensor):
+        return state.flatten().float()
     else:
         raise NotImplementedError(state)
 
 
 def imageify_state(state) -> torch.Tensor:
-    if isinstance(state, list) or isinstance(state, np.ndarray):
+    if isinstance(state, int):
+        return np.ones((1, 3, 10, 10)) * state
+    elif isinstance(state, list) or isinstance(state, np.ndarray):
         state = torch.tensor(state).float()
         if len(state.shape) == 3:
             state = state.unsqueeze(0)
@@ -112,12 +117,27 @@ def imageify_state(state) -> torch.Tensor:
     # elif isinstance(state, np.ndarray):
     #     raise NotImplementedError(state)
     elif isinstance(state, torch.Tensor):
-        raise NotImplementedError(state)
+        if len(state.shape) == 3 and state.shape[0] == 3:
+            return state.unsqueeze(0)
+        if len(state.shape) == 4 and state.shape[1] == 3:
+            return state
     else:
         raise NotImplementedError(state)
 
 
-def generate_random_string(n : int) -> str:
-        letters = list("abcdefghijklmnopqrstuvwxyz")
-        chosen = np.random.choice(letters, n)
-        return "".join(list(chosen))
+def generate_random_string(n: int) -> str:
+    letters = list("abcdefghijklmnopqrstuvwxyz")
+    chosen = np.random.choice(letters, n)
+    return "".join(list(chosen))
+
+
+def get_datetime_string() -> str:
+    dt = datetime.now().strftime("%Ym%d_%H%M%S")
+
+
+def are_sets_independent(sets: set[set]) -> bool:
+    for s1 in sets:
+        for s2 in sets - {s1}:
+            if not len(s1 & s2) == 0:
+                return False
+    return True

@@ -3,11 +3,12 @@ import gym
 import run
 from agents import *
 
+
 def load_random_env():
     env_names = list(gym.envs.registry.env_specs)
     print(env_names)
     loaded = False
-    i=0
+    i = 0
     while not loaded and i < 1000:
         i += 1
         env_name = np.random.choice(env_names)

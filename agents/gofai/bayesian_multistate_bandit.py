@@ -41,8 +41,8 @@ class BayesianMultistateBandit(QsaLearner):
             self._data[s][a].append(r)
 
     def get_reward_dist(self,
-             s: gym.core.ObsType,
-             a: gym.core.ActType):
+                        s: gym.core.ObsType,
+                        a: gym.core.ActType):
         r_s_a_mean = pyro.sample(f"r_{s}_{a}_mean", dist.Normal(self._means_mean_init, self._means_var_init))
         r_s_a = pyro.sample(f"r_{s}_{a}", dist.Normal(r_s_a_mean, 1.0), obs=self._data[s][a])
         print(r_s_a)

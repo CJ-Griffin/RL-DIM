@@ -58,7 +58,6 @@ class QsaLearner(Agent):
                 raise NotImplementedError(state)
         return state
 
-
     @abstractmethod
     def get_greedy_action(self, state):
         pass
@@ -66,6 +65,7 @@ class QsaLearner(Agent):
     @abstractmethod
     def _init_Q_s(self, state):
         pass
+
     # def step(self, state, action, reward: float, next_state, done: bool):
     #     self._memory.add(state, action, reward, next_state, done)
     #     if self.t % self._update_freq == 0 and len(self._memory) > self.batch_size:
@@ -82,7 +82,7 @@ class QsaLearner(Agent):
         str_out += f"{self.__class__.__name__} - Q(s,a)=... \n"
         Q_string = self._Q_to_string()
         if len(Q_string.split("\n")) >= 10:
-            Q_string = "\n".join(Q_string.split("\n")[:5])+"\n ... \n"
+            Q_string = "\n".join(Q_string.split("\n")[:5]) + "\n ... \n"
         str_out += Q_string
         str_out += f"\nID = {self._unique_ID}\n"
         str_out += "------------------------\n"

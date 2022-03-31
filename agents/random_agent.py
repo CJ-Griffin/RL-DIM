@@ -4,7 +4,6 @@ from running.run_parameters import TrainParams
 
 
 class RandomAgent(Agent):
-
     REQUIRES_TRAINING = False
     REQUIRES_FINITE_STATE_SPACE = False
     REQUIRES_FINITE_ACTION_SPACE = False

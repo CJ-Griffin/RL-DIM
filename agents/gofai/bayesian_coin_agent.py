@@ -12,7 +12,7 @@ class BayesianCoinAgent(Agent):
 
     def __init__(self, action_space: gym.Space, state_space: gym.Space):
         super().__init__(action_space, state_space)
-        assert(isinstance(state_space, gym.spaces.Discrete))
+        assert (isinstance(state_space, gym.spaces.Discrete))
         self._state_list = list(range(state_space.n))
         self._action_list = get_action_list(action_space)
         self._data = {}
@@ -34,7 +34,7 @@ class BayesianCoinAgent(Agent):
             hist = self._data[state][action]
             heads = np.sum(hist)
             tails = len(hist) - heads
-            ps[action] = (heads+1) / (heads + tails + 2)
+            ps[action] = (heads + 1) / (heads + tails + 2)
         print(ps)
         chosen_action = max(ps, key=ps.get)
         print(chosen_action)
