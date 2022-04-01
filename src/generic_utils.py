@@ -111,8 +111,14 @@ def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
         return None
     else:
         try:
+            # token = os.getenv('NEPTUNE_API_TOKEN')
+
+            # # I'm exposing my token since its already exposed and contains no sensitive data.
+            token = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubm" \
+                    "VwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ=="
+
             nept_log = neptune.init(project="cj.griffin/RL4YP",
-                                    api_token=os.getenv('NEPTUNE_API_TOKEN'), )
+                                    api_token=token, )
             nept_log["parameters"] = params.get_dict()
             nept_log["skein_id"] = skein_id
             nept_log["experiment_name"] = experiment_name

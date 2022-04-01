@@ -283,6 +283,11 @@ class EmptyGrid1D(EmptyGrid):
         super().__init__(height=1, width=5, player_init=(0, 0), goal_loc=None)
 
 
+class TinyEmptyGrid(EmptyGrid):
+    def __init__(self, height=3, width=4, player_init=(0, 0), goal_loc=None, max_steps=100):
+        super().__init__(height, width, player_init, goal_loc, max_steps)
+
+
 class SmallEmptyGrid(EmptyGrid):
     def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)

@@ -1,37 +1,7 @@
 import torch
-from bayesian_torch.models.dnn_to_bnn import dnn_to_bnn
 
 import gym
 from src.generic_utils import vectorise_state, get_action_list, imageify_state
-
-
-class BDNN(torch.nn.Module):
-    def __init__(self, state_space: gym.Space, action_space: gym.Space):
-        super().__init__()
-        # Draw a sample from state space, turn it into a vector
-        # its dimension will be the shape of the state space
-        self._m = DNN(state_space=state_space, action_space=action_space)
-
-        # Taken from github
-        const_bnn_prior_parameters = {
-            "prior_mu": 0,
-            "prior_sigma": 2.0,
-            "posterior_mu_init": 0.0,
-            "posterior_rho_init": 1.0,
-            "type": "Reparameterization",  # Flipout or Reparameterization
-            "moped_enable": False,  # True to initialize mu/sigma from the pretrained dnn weights
-            "moped_delta": 0.5,
-        }
-
-        dnn_to_bnn(self._m, const_bnn_prior_parameters)
-
-        # Redefine via DNN
-        self.in_size = len(vectorise_state(state_space.sample()))
-        self.action_list = get_action_list(action_space)
-        self.out_size = len(self.action_list)
-
-    def forward(self, state_vec: torch.Tensor):
-        return self._m(state_vec)
 
 
 class DNN(torch.nn.Module):

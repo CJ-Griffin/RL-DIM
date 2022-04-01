@@ -202,6 +202,16 @@ skein_dict = {
         ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
     ],
 
+    "short_compare_on_tiny_empty_grid": [
+        TrainParams(
+            env_name="TinyEmptyGrid",
+            agent_name=agent_name,
+            num_episodes=10000,
+            gamma=0.9,
+            should_debug=False
+        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+    ],
+
     "short_compare_on_1d_grid": [
         TrainParams(
             env_name="EmptyGrid1D",
