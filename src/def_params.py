@@ -52,68 +52,6 @@ SKEIN_DICT = {
         )
     ],
 
-    "test_simple_wall_grid": [
-        TrainParams(
-            env_name="SimpleWallGrid",
-            agent_name="HumanAgent",
-            num_episodes=100,
-            gamma=0.9,
-            is_test=True,
-            should_render=True,
-            should_debug=True
-        )
-    ],
-
-    "DoorGridTest": [
-        TrainParams(
-            env_name="DoorGrid",
-            agent_name="HumanAgent",
-            num_episodes=100,
-            gamma=0.9,
-            is_test=True,
-            should_render=True,
-            should_debug=True
-        )
-    ],
-
-    "VaseGridTest": [
-        TrainParams(
-            env_name="VaseGrid",
-            agent_name="HumanAgent",
-            num_episodes=100,
-            gamma=0.9,
-            is_test=True,
-            should_render=True,
-            should_debug=True
-        )
-    ],
-
-    "MuseumGridTest": [
-        TrainParams(
-            env_name="MuseumGrid",
-            agent_name="HumanAgent",
-            num_episodes=100,
-            gamma=0.9,
-            is_test=True,
-            should_render=True,
-            should_debug=True,
-            should_skip_neptune=True
-        )
-    ],
-
-    "SmallMuseumGridTest": [
-        TrainParams(
-            env_name="SmallMuseumGrid",
-            agent_name="HumanAgent",
-            num_episodes=1,
-            gamma=0.9,
-            is_test=True,
-            should_render=True,
-            should_debug=True,
-            # should_skip_neptune=True
-        )
-    ],
-
     "SmallMuseumGridTrain": [
         TrainParams(
             env_name="SmallMuseumGrid",
@@ -240,77 +178,14 @@ SKEIN_DICT = {
             should_skip_neptune=False
         ) for a in ["DQN_CNN"]
     ],
-
-    "find_mnist_lr": [
-        TrainParams(
-            env_name="MnistEnv",
-            agent_name="DQN_CNN",
-            num_episodes=1e5,
-            gamma=0.9,
-            should_debug=False,
-            is_test=False,
-            # should_skip_neptune=True,
-            learning_rate=lr
-        ) for lr in [0.0001, 0.0005, 0.001, 0.005]
-    ],
-
-    "short_compare_on_empty_grid": [
-        TrainParams(
-            env_name="SimpleGrid",
-            agent_name=agent_name,
-            num_episodes=10000,
-            gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
-
-    "short_compare_on_simple_wall_grid": [
-        TrainParams(
-            env_name="SimpleWallGrid",
-            agent_name=agent_name,
-            num_episodes=10000,
-            gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
-
-    "short_compare_on_small_empty_grid": [
-        TrainParams(
-            env_name="SmallEmptyGrid",
-            agent_name=agent_name,
-            num_episodes=10000,
-            gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
-
-    "short_compare_on_tiny_empty_grid": [
-        TrainParams(
-            env_name="TinyEmptyGrid",
-            agent_name=agent_name,
-            num_episodes=10000,
-            gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
-
-    "short_compare_on_1d_grid": [
-        TrainParams(
-            env_name="EmptyGrid1D",
-            agent_name=agent_name,
-            num_episodes=10000,
-            gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
-
-    "short_compare_on_bandit": [
-        TrainParams(
-            env_name="BanditEnv",
-            agent_name=agent_name,
-            num_episodes=1e3,
-            gamma=0.9,
-            # should_debug=True
-        ) for agent_name in ["DQN"] for i in range(20)  # , "SARSA"]  # SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    ],
 }
+
+import src.more_skein_definitions
+
+more_skein_dicts = []
+for x in dir(src.more_skein_definitions):
+    mod = getattr(src.more_skein_definitions, x)
+    if hasattr(mod, "SKEIN_DICT"):
+        sd = getattr(mod, "SKEIN_DICT")
+        for key in sd.keys():
+            SKEIN_DICT[key] = sd[key]
