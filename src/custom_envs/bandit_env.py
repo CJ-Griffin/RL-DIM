@@ -5,12 +5,13 @@ import numpy as np
 
 from src.custom_envs.base_env import BaseEnv
 
+
 class BanditEnv(BaseEnv):
 
     def __init__(self,
                  means: list = [-1, 0, 1],
                  variance: float = 1,
-                 maxtime: int = 1):
+                 maxtime: int = 100):
         self._means = means
         self._variance = variance
 
@@ -31,13 +32,12 @@ variance:{self._variance}
         print()
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> ObsType:
+        self._timestep = 0
         return 1
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         self._timestep += 1
         done = self._timestep >= self._maxtime
-        if done:
-            self._timestep = 0
 
         reward = np.random.normal(self._means[action], np.sqrt(self._variance))
         return 1, reward, done, {}

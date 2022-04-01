@@ -70,6 +70,20 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         plot_train_scores(episode_scores)
 
 
+def run_eval(agent: Agent,
+             env: gym.Env,
+             # nept_log: neptune.Run,
+             num_episodes: int) -> float:
+    scores = run_episodic(agent=agent,
+                          env=env,
+                          num_episodes=num_episodes,
+                          nept_log=None,
+                          episode_record_interval=num_episodes // 20,
+                          is_eval=True)
+
+    return float(np.mean(scores))
+
+
 def run_episodic(agent: Agent,
                  env: gym.Env,
                  num_episodes: int,
@@ -84,11 +98,15 @@ def run_episodic(agent: Agent,
         if ep_num % episode_record_interval == 0:
             env.start_recording()
 
-        num_steps, score = run_episode(agent, env)
-        episode_scores.append(score)
+        info = run_episode(agent, env)
+        episode_scores.append(info["score"])
 
         if nept_log is not None:
-            nept_log["ep_scores"].log(score)
+            nept_log["ep_scores"].log(info["score"])
+            action_freqs = info["action_freqs"]
+            action_freqs = action_freqs / action_freqs.sum()
+            for i in range(0,5):
+                nept_log[f"action_freqs/{i}"].log(action_freqs[i])
 
         if ep_num % episode_record_interval == 0:
             env.stop_and_log_recording((-ep_num if is_eval else ep_num))
@@ -99,34 +117,24 @@ def run_episodic(agent: Agent,
     return episode_scores
 
 
-def run_eval(agent: Agent,
-             env: gym.Env,
-             # nept_log: neptune.Run,
-             num_episodes: int) -> float:
-    scores = run_episodic(agent=agent,
-                          env=env,
-                          num_episodes=num_episodes,
-                          nept_log=None,
-                          episode_record_interval=num_episodes//20,
-                          is_eval=True)
-
-    return float(np.mean(scores))
-
 
 def run_episode(agent: Agent,
                 env: gym.Env,
                 max_steps: int = int(1e4),
-                should_render: bool = False) -> (int, float):
+                should_render: bool = False) -> dict:
     state = env.reset()
     num_steps = 0
     done = False
     rewards = []
+
+    action_freqs = np.zeros(5)
 
     while not done and num_steps <= max_steps:
         num_steps += 1
         if should_render:
             env.render()
         action = agent.act(state)
+        action_freqs[action] += 1
         next_state, reward, done, info = env.step(action)
         agent.step(state, action, reward, next_state, done)
         state = next_state
@@ -134,7 +142,9 @@ def run_episode(agent: Agent,
 
     env.close()
     score = np.sum(rewards)  # TODO consider different episode scores
-    return num_steps, score
+    return {"num_steps":num_steps,
+            "score": score,
+            "action_freqs": action_freqs}
 
 
 if __name__ == '__main__':

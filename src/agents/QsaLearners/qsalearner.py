@@ -7,7 +7,7 @@ import gym
 from src.run_parameters import TrainParams
 from src.generic_utils import get_action_list
 from abc import abstractmethod
-from src.agents.QsaLearners.replay_buffer import ReplayBuffer
+from src.agents.QsaLearners.replay_buffer import LinearMemory
 
 
 class QsaLearner(Agent):
@@ -25,7 +25,7 @@ class QsaLearner(Agent):
         self._batch_size: int = params.batch_size
 
         self._allowed_actions = get_action_list(self._action_space)
-        self._memory = ReplayBuffer(buffer_size=self._buffer_size,
+        self._memory = LinearMemory(buffer_size=self._buffer_size,
                                     batch_size=self._batch_size)
         self._state_hasher = xxhash.xxh64()
 

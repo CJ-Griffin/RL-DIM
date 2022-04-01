@@ -17,8 +17,7 @@ class DNN(torch.nn.Module):
             torch.nn.ReLU(),
             torch.nn.Linear(60, 30),
             torch.nn.ReLU(),
-            torch.nn.Linear(30, self.out_size),
-            torch.nn.ReLU()
+            torch.nn.Linear(30, self.out_size)
         )
 
     def forward(self, state_vec: torch.Tensor):
@@ -55,7 +54,6 @@ class CNN(torch.nn.Module):
             torch.nn.LazyLinear(out_features=20),
             torch.nn.ReLU(),
             torch.nn.Linear(20, self.out_size),
-            torch.nn.ReLU()
         )
 
     def forward(self, state_img: torch.Tensor):

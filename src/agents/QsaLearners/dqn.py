@@ -4,6 +4,7 @@ import numpy as np
 
 from src.agents.QsaLearners.qsalearner import QsaLearner
 from src.agents.networks import DNN, CNN
+from src.agents.QsaLearners.replay_buffer import ReplayBuffer
 from src.run_parameters import TrainParams
 from src.generic_utils import vectorise_state, imageify_state
 
@@ -18,9 +19,11 @@ class DQN(QsaLearner):
 
     def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
         super().__init__(action_space, state_space, params)
+        self._update_freq = params.update_freq
+        self._num_steps_since_update = 0
+
         self._alpha = params.alpha
-        self._batch_size = params.batch_size
-        self._buffer_size = params.buffer_size
+        self._memory = ReplayBuffer(self._buffer_size)
 
         self._Q_net = self.NETWORK_CLASS(state_space=self._state_space, action_space=self._action_space)
         self.optimiser = torch.optim.Adam(self._Q_net.parameters(), lr=params.learning_rate)
@@ -35,16 +38,16 @@ class DQN(QsaLearner):
         if x.shape == torch.Size([]):
             x = x.reshape(1)
         Qs = self._Q_net(x)
+        a = int(Qs.argmax())
         if self._should_debug:
-            p = 1e-3
+            p = 1e-1
             if np.random.choice([True, False], p=[p, 1.0 - p]):
                 if self.NETWORK_CLASS == CNN:
                     print(f"Q({state[0, :, :4, :4]}) = {Qs}")
                 else:
                     print(f"Q({state[:4]}) = {Qs}")
-                print(self._Q_net)
-        a = Qs.argmax()
-        a = int(a)
+                # print(self._Q_net)
+                print(a)
         return a
 
     def step(self, state: gym.core.ObsType,
@@ -56,11 +59,14 @@ class DQN(QsaLearner):
         state = self.preprocess_state(state)
         next_state = self.preprocess_state(next_state)
         self._memory.add(state, action, reward, next_state, done)
-        if len(self._memory) >= self._batch_size:
+        self._num_steps_since_update += 1
+        if self._num_steps_since_update%self._update_freq == 0:
             self.update()
 
     def update(self):
-        states, actions, rewards, next_states, dones = self._memory.sample(sample_all=True, as_torch=True)
+        self._num_steps_since_update = 0
+        sample = self._memory.sample(self._batch_size)
+        states, actions, rewards, next_states, dones = sample
 
         # I'm not detaching here - this could mess with backprop!
         with torch.no_grad():
@@ -69,17 +75,17 @@ class DQN(QsaLearner):
 
         Q_next_states[dones.flatten()] = 0.0
         targets = (self._gamma * Q_next_states) + rewards.flatten()
-        prevs_0 = self._Q_net(states)[torch.arange(len(states)), :]
-        prevs = self._Q_net(states)[torch.arange(len(states)), actions.flatten()]
+        prev_qs = self._Q_net(states)
+        prevs = prev_qs[torch.arange(len(states)), actions.squeeze()]
         loss = self.loss(prevs, targets)
         p = 1e-1
         if self._should_debug and np.random.choice([True, False], p=[p, 1.0 - p]):
-            self.debug_print(Q_next_states, actions, dones, prevs, prevs_0, rewards, states, targets, loss)
+            self.debug_print(Q_next_states, actions, dones, prevs, rewards, states, targets, loss)
         self.optimiser.zero_grad()
         loss.backward()
         self.optimiser.step()
 
-    def debug_print(self, Q_next_states, actions, dones, prevs, prevs_0, rewards, states, targets, loss):
+    def debug_print(self, Q_next_states, actions, dones, prevs, rewards, states, targets, loss):
         for i in range(len(states)):
             if states[i].shape[0] >= 3:
                 print(states[i].view(3, -1))
@@ -98,7 +104,7 @@ class DQN(QsaLearner):
         # print(Qs)
         # print("State-action pairs from update")
         # print([(int(a), float(tar)) for (a, tar) in zip(list(actions), list(targets))])
-        print("loss ", loss)
+        print("loss ", loss, "="*80)
 
     def _Q_to_string(self):
         return str(self._Q_net)

@@ -1,4 +1,5 @@
 import collections
+import random
 
 import numpy as np
 import torch
@@ -6,7 +7,46 @@ import torch
 device = torch.device("cpu")
 
 
-class ReplayBuffer:
+# Adapted from OpenAI: https://github.com/openai/
+class ReplayBuffer(object):
+    def __init__(self, size):
+        self._memory = []
+        self._maxsize = size
+        self._next_idx = 0
+
+    def __len__(self):
+        return len(self._memory)
+
+    def add(self, obs_t, action, reward, obs_tp1, done):
+        if self._next_idx >= len(self._memory):
+            self._memory.append((obs_t, action, reward, obs_tp1, done))
+        else:
+            self._memory[self._next_idx] = (obs_t, action, reward, obs_tp1, done)
+        self._next_idx = (self._next_idx + 1) % self._maxsize
+
+    def _encode_sample(self, idxes):
+        states, actions, rewards, next_states, dones = [], [], [], [], []
+        for i in idxes:
+            data = self._memory[i]
+            state, action, reward, next_state, done = data
+            states.append(np.array(state[0], copy=False))
+            actions.append(action)
+            rewards.append(reward)
+            next_states.append(np.array(next_state[0], copy=False))
+            dones.append(done)
+        s = torch.tensor(states, dtype=torch.float, device=device)
+        a = torch.tensor(actions, dtype=torch.long, device=device)
+        r = torch.tensor(rewards, dtype=torch.float, device=device)
+        s2 = torch.tensor(next_states, dtype=torch.float, device=device)
+        d = torch.tensor(dones, dtype=torch.bool, device=device)
+        return s, a, r, s2, d
+
+    def sample(self, batch_size):
+        idxes = list(np.random.randint(len(self._memory), size=batch_size))
+        return self._encode_sample(idxes)
+
+
+class LinearMemory:
     def __init__(self, buffer_size: int, batch_size: int):
         self.buffer_size = buffer_size
         self.batch_size = batch_size
@@ -20,11 +60,8 @@ class ReplayBuffer:
     def add(self, state, action, reward, next_state, done):
         self.memory.append(self.ExperienceType(state, action, reward, next_state, done))
 
-    def sample(self, sample_all: bool = False, as_torch=False):
-        if sample_all:
-            experiences = list(self.memory)
-        else:
-            experiences = list(np.random.sample(self.memory, k=self.batch_size))
+    def sample(self, sample_all: bool = False, as_torch: bool = True):
+        experiences = list(self.memory)
         self.memory.clear()
 
         # TODO - if not broken - remove this

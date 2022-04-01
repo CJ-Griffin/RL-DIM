@@ -5,7 +5,7 @@ import src.custom_envs
 ALL_ENVS = []
 ALL_GRIDS = []
 for thing_name in dir(src.custom_envs):
-    thing = getattr(src.custom_envs,thing_name)
+    thing = getattr(src.custom_envs, thing_name)
     try:
         if issubclass(thing, BaseEnv):
             ALL_ENVS.append(thing.__name__)
@@ -15,7 +15,6 @@ for thing_name in dir(src.custom_envs):
         pass
 ALL_ENVS.remove("Grid")
 ALL_GRIDS.remove("Grid")
-
 
 SOME_AGENT_NAMES = [
     "RandomAgent",
@@ -124,8 +123,25 @@ SKEIN_DICT = {
             is_test=True,
             # should_render=True,
             # should_debug=True,
-            should_skip_neptune=True
-        ) for an in ["DQN"]
+            # should_skip_neptune=True
+        ) for an in ["DQN_CNN"]
+        # ["SARSA",
+        #  "QLearner",
+        #  "DQN",
+        #  "DQN_CNN"]  # SOME_AGENT_NAMES if an != "HumanAgent"
+    ],
+
+    "SimpleWallTrainDQN_CNN": [
+        TrainParams(
+            env_name="SimpleWallGrid",
+            agent_name=an,
+            num_episodes=int(1e5),
+            gamma=0.9,
+            is_test=True,
+            # should_render=True,
+            # should_debug=True,
+            # should_skip_neptune=True
+        ) for an in ["DQN_CNN"]
         # ["SARSA",
         #  "QLearner",
         #  "DQN",
@@ -188,13 +204,29 @@ SKEIN_DICT = {
 
     "test_DQN_CNN": [
         TrainParams(
-            env_name="SmallRandDirtGrid",
-            agent_name="DQN_CNN",
-            num_episodes=int(1e6),
+            env_name="TinyEmptyGrid",
+            agent_name="DQN",
+            num_episodes=int(1e4),
             gamma=0.9,
-            epsilon=epsilon
+            epsilon=epsilon,
+            # should_debug=True
         )
         for epsilon in [0.05]  # [0.01, 0.05, 0.1]
+    ],
+
+    "TinyEmptyGrid_DQN_HyperParamSearch": [
+        TrainParams(
+            env_name="TinyEmptyGrid",
+            agent_name="DQN",
+            num_episodes=int(1e3),
+            gamma=0.9,
+            batch_size=batch_size,
+            buffer_size=buffer_size,
+            update_freq=update_freq
+        )
+        for batch_size in [4, 16, 64]
+        for buffer_size in [int(1e3), int(1e4), int(1e5)]
+        for update_freq in [int(1e1), int(1e2), int(1e3)]
     ],
 
     "DQN_on_MNIST": [
@@ -276,9 +308,9 @@ SKEIN_DICT = {
         TrainParams(
             env_name="BanditEnv",
             agent_name=agent_name,
-            num_episodes=1000,
+            num_episodes=1e3,
             gamma=0.9,
-            should_debug=False
-        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+            # should_debug=True
+        ) for agent_name in ["DQN"] for i in range(20)  # , "SARSA"]  # SOME_AGENT_NAMES if agent_name != "HumanAgent"
     ],
 }

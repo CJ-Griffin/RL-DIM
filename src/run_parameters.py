@@ -10,9 +10,9 @@ class TrainParams:
     gamma: float
     alpha: float = 0.05
     epsilon: float = 0.05
-    buffer_size: int = int(1e4)
-    batch_size: int = 100
-    update_freq: int = 10
+    buffer_size: int = int(5e4)
+    batch_size: int = 32
+    update_freq: int = 100
     q_init: float = 0.0
     learning_rate: float = 1e-3
     should_debug: bool = False
