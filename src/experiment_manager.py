@@ -48,7 +48,7 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         print(f"skipping training for {params.agent_name}")
 
     if not params.agent_name == "HumanAgent":
-        eval_score = run_eval(agent, env, nept_log, 200)
+        eval_score = run_eval(agent, env, 200)
         if nept_log is not None:
             nept_log["eval_score"] = eval_score
         print(params.agent_name, eval_score)
@@ -82,7 +82,9 @@ def run_episodic(agent: Agent,
 
         num_steps, score = run_episode(agent, env)
         episode_scores.append(score)
-        nept_log["ep_scores"].log(score)
+
+        if nept_log is not None:
+            nept_log["ep_scores"].log(score)
 
         if ep_num % episode_record_interval == 0:
             env.stop_and_log_recording(ep_num)
@@ -95,13 +97,13 @@ def run_episodic(agent: Agent,
 
 def run_eval(agent: Agent,
              env: gym.Env,
-             nept_log: neptune.Run,
+             # nept_log: neptune.Run,
              num_episodes: int) -> float:
     scores = run_episodic(agent=agent,
                           env=env,
                           num_episodes=num_episodes,
-                          nept_log=nept_log,
-                          episode_record_interval=1)
+                          nept_log=None,
+                          episode_record_interval=num_episodes//20)
 
     return float(np.mean(scores))
 

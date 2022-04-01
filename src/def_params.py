@@ -133,7 +133,17 @@ skein_dict = {
             should_debug=False,
             is_test=True
         ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-        for env_name in ["SmallEmptyGrid", "BanditEnv"]
+    ])),
+
+    "train_empty_grid": list(reversed([
+        TrainParams(
+            env_name="SmallEmptyGrid",
+            agent_name=agent_name,
+            num_episodes=1e5,
+            gamma=0.9,
+            should_debug=False,
+            # is_test=True
+        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
     ])),
 
     "test_DQN_CNN": [
@@ -144,7 +154,6 @@ skein_dict = {
             gamma=0.9,
             epsilon=epsilon
         )
-        for env_name in ["RandDirtGrid"]
         for epsilon in [0.01, 0.05, 0.1]
     ],
 
@@ -186,6 +195,16 @@ skein_dict = {
     "short_compare_on_small_empty_grid": [
         TrainParams(
             env_name="SmallEmptyGrid",
+            agent_name=agent_name,
+            num_episodes=10000,
+            gamma=0.9,
+            should_debug=False
+        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+    ],
+
+    "short_compare_on_1d_grid": [
+        TrainParams(
+            env_name="EmptyGrid1D",
             agent_name=agent_name,
             num_episodes=10000,
             gamma=0.9,

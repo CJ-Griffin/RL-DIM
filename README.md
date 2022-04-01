@@ -14,3 +14,23 @@ pip install tensorboard
 ```
 
 For now, I'm assuming fully observable, i.e. that `observation = state`
+
+```commandline
+git clone https://github.com/CJ-Griffin/RL.git
+sudo apt-get upgrade
+sudo apt-get update
+sudo apt-get install libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+sudo apt-get install curl
+```
+
+got to https://www.anaconda.com/products/distribution#linux to find the correct install, copy the URL and run:
+```commandline
+curl https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh --output conda.sh
+bash conda.sh
+```
+Restart terminal
+
+```commandline
+conda update -n base conda
+conda update anaconda
+```
