@@ -9,7 +9,7 @@ import neptune.new as neptune
 
 # My imports
 from src.agents import Agent
-from src.def_params import skein_dict
+from src.def_params import SKEIN_DICT
 from src.run_parameters import TrainParams
 from src.generic_utils import init_neptune_log, save_recordings, plot_train_scores
 from src.rl_utils import get_env, get_agent
@@ -58,6 +58,9 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
             print("=" * 20 + f" Sample Render {ep_no} " + "=" * 20)
             run_episode(agent, env, should_render=True)
 
+    if params.agent_name == "HumanAgent":
+        run_episode(agent, env, should_render=True)
+
     if nept_log is not None:
         recordings = env.get_recordings()
         if len(recordings) > 0:
@@ -71,7 +74,8 @@ def run_episodic(agent: Agent,
                  env: gym.Env,
                  num_episodes: int,
                  nept_log: neptune.Run,
-                 episode_record_interval: int = 1000):
+                 episode_record_interval: int = 1000,
+                 is_eval: bool = False):
     episode_scores = []
 
     ep_iter = tqdm(range(num_episodes))
@@ -87,7 +91,7 @@ def run_episodic(agent: Agent,
             nept_log["ep_scores"].log(score)
 
         if ep_num % episode_record_interval == 0:
-            env.stop_and_log_recording(ep_num)
+            env.stop_and_log_recording((-ep_num if is_eval else ep_num))
 
         if ep_num % 1000 == 0:
             ep_iter.set_description(f"AS = {np.mean(episode_scores[-1000:])}")
@@ -103,7 +107,8 @@ def run_eval(agent: Agent,
                           env=env,
                           num_episodes=num_episodes,
                           nept_log=None,
-                          episode_record_interval=num_episodes//20)
+                          episode_record_interval=num_episodes//20,
+                          is_eval=True)
 
     return float(np.mean(scores))
 
@@ -135,7 +140,7 @@ def run_episode(agent: Agent,
 if __name__ == '__main__':
     g_prsr = argparse.ArgumentParser()
     g_prsr.add_argument("-e", "--experiment_name",
-                        choices=list(skein_dict.keys()) + [None],
+                        choices=list(SKEIN_DICT.keys()) + [None],
                         default=None)
     g_args = g_prsr.parse_args()
     if g_args.experiment_name is not None:
@@ -143,9 +148,9 @@ if __name__ == '__main__':
     else:
         import enquiries
 
-        g_choice = enquiries.choose('Choose an experiment to run: ', skein_dict.keys())
+        g_choice = enquiries.choose('Choose an experiment to run: ', SKEIN_DICT.keys())
         print(f"CHOSEN: {g_choice}")
-    g_skein = skein_dict[g_choice]
+    g_skein = SKEIN_DICT[g_choice]
     g_time_id = datetime.datetime.now().strftime('%Ym%d_%H%M%S')
     g_skein_id = f"{g_choice}_{g_time_id}"
     if not g_skein[0].should_profile:

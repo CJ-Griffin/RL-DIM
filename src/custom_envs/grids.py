@@ -5,6 +5,7 @@ import emoji
 from gym.core import ObsType, ActType
 
 from src.custom_envs.base_env import BaseEnv
+
 # from src.utils import are_sets_independent
 
 CHAR_TO_PIXEL = {
@@ -56,6 +57,19 @@ class Robot:
 # TODO - make random seed system
 
 
+def np_grid_to_string(grid: np.array, should_emojify=False):
+    if should_emojify:
+        f = char_to_emoji
+    else:
+        f = (lambda x: x)
+    row_lists = [list(map(f, row)) for row in grid]
+    w = grid.shape[1]
+    row_strings = ["+ " + ("- " * w) + "+"] + \
+                  [" ".join(["|"] + row_list + ["|"]) for row_list in row_lists] + \
+                  ["+ " + ("- " * w) + "+"]
+    return emoji.emojize("\n".join(row_strings))
+
+
 class Grid(BaseEnv):
     def __init__(self, height, width, player_init,
                  goal_loc=None, max_steps=100, dirt_value=1.0):
@@ -82,31 +96,28 @@ class Grid(BaseEnv):
         self._recordings = {}
 
         self.rob = Robot(*player_init)
-        self.grid = self.get_init_grid()
+        self.grid = self._get_init_grid()
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
         self.grid_s0_history = self.grid.copy()
         self._last_reward = None
         self.passable_objects = [' ', '.', 'G', '/', 'V']
 
+    # ========== # ========== # - Generating new Grids - # ========== # ========== #
     # WDDV = Wall, Door, Dirt, Vase
-    def get_object_locations_WDDV(self) -> (list, list, list, list):
-        walls, doors = self.get_new_wall_and_door_locations()
-        return walls, doors, self.get_new_dirt_locations(), self.get_vase_locations()
-
-    def get_new_dirt_locations(self):
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
         raise NotImplementedError()
 
-    def get_new_wall_and_door_locations(self) -> (list, list):
-        raise NotImplementedError()
+    def _get_new_player_init(self) -> (int, int):
+        return self.player_init
 
-    def get_vase_locations(self) -> list:
-        raise NotImplementedError()
+    def _get_new_goal_loc(self) -> (int, int):
+        return self.goal_loc
 
-    def get_init_grid(self):
+    def _get_init_grid(self):
         arr = np.empty((self.height, self.width), dtype=np.unicode_)
         arr[:, :] = ' '
 
-        wall_locations, door_locations, dirt_locations, vase_locations = self.get_object_locations_WDDV()
+        wall_locations, door_locations, dirt_locations, vase_locations = self._get_object_locations_WDDV()
 
         # Define conflicts where two objects exist
         object_sets = [
@@ -134,34 +145,31 @@ class Grid(BaseEnv):
         arr[self.goal_loc] = 'G'
         return arr
 
-    def np_grid_to_string(self, grid, should_emojify=False):
-        if should_emojify:
-            row_strings = [" ".join(list(map(char_to_emoji, row))) for row in grid]
-        else:
-            row_strings = [" ".join(list(row)) for row in grid]
-        return emoji.emojize("\n".join(row_strings))
+    # ========== # ========== # - Public fixed methods - # ========== # ========== #
 
     def render(self, mode="human"):
-        grid = self.get_grid_with_rob()
+        grid = self._get_grid_with_rob()
         print("\n--- GridEnv ---")
-        print(self.np_grid_to_string(grid, should_emojify=False))
+        print(np_grid_to_string(grid, should_emojify=False))
         print(f"Last reward: {self._last_reward}")
         print("---  ======== ---")
         print()
 
-    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> ObsType:
+    def reset(self, *, seed: Optional[int] = None,
+              options: Optional[dict] = None) -> ObsType:
+        self.player_init = self._get_new_player_init()
         self.rob.y, self.rob.x = self.player_init
-        self.grid = self.get_init_grid()
+        self.goal_loc = self._get_new_goal_loc()
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
         self.elapsed_steps = 0
         if self._is_recording:
             self._record_step()
-        return self.get_obs()
+        return self._get_obs()
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         self.elapsed_steps += 1
         if action != 4:
-            dest = self.get_dest(action)
+            dest = self._get_dest(action)
             is_interact = False
         else:
             dest = None
@@ -184,9 +192,9 @@ class Grid(BaseEnv):
             has_won = False
             destroys_vase = False
             if is_interact:
-                self.do_interactions()
+                self._do_interactions()
 
-        obs = self.get_obs()
+        obs = self._get_obs()
         reward = (int(gets_dirt) * self.dirt_value) + \
                  (-0.1 * (dest is None and not is_interact)) + \
                  (10 * has_won)
@@ -197,42 +205,9 @@ class Grid(BaseEnv):
             self._record_step()
         return obs, reward, done, info
 
-    def do_interactions(self):
-        y = self.rob.y
-        x = self.rob.x
-        adjacent = [
-            (y + 1, x),
-            (y - 1, x),
-            (y, x + 1),
-            (y, x - 1)
-        ]
-        adjacent = filter(self.is_loc_in_bounds_tuple, adjacent)
-        for (y1, x1) in adjacent:
-            self.interact(y1, x1)
-
-    def interact(self, y, x):
-        if self.grid[y, x] == '|':
-            self.grid[y, x] = '/'
-        elif self.grid[y, x] == '/':
-            self.grid[y, x] = '|'
-
-    def get_grid_with_rob(self):
-        grid = self.grid.copy()
-        grid[self.rob.y, self.rob.x] = 'R'
-        return grid
-
-    def get_obs(self) -> np.array:
-        grid = self.get_grid_with_rob()
-        grid2 = vchar_to_pixel(grid)
-        grid3 = np.stack(grid2)
-        return grid3
-
     def start_recording(self):
         assert not self._is_recording
         self._is_recording = True
-
-    def _record_step(self):
-        self._im_history.append(self.get_obs())
 
     def stop_and_log_recording(self, episode_number: int) -> None:
         self._is_recording = False
@@ -242,7 +217,41 @@ class Grid(BaseEnv):
     def get_recordings(self) -> dict[list[np.array]]:
         return self._recordings
 
-    def get_dest(self, action):
+    # ========== # ========== # - Private fixed methods - # ========== # ========== #
+    def _record_step(self):
+        self._im_history.append(self._get_obs())
+
+    def _do_interactions(self):
+        y = self.rob.y
+        x = self.rob.x
+        adjacent = [
+            (y + 1, x),
+            (y - 1, x),
+            (y, x + 1),
+            (y, x - 1)
+        ]
+        adjacent = filter(self._is_loc_in_bounds_tuple, adjacent)
+        for (y1, x1) in adjacent:
+            self._interact(y1, x1)
+
+    def _interact(self, y, x):
+        if self.grid[y, x] == '|':
+            self.grid[y, x] = '/'
+        elif self.grid[y, x] == '/':
+            self.grid[y, x] = '|'
+
+    def _get_grid_with_rob(self):
+        grid = self.grid.copy()
+        grid[self.rob.y, self.rob.x] = 'R'
+        return grid
+
+    def _get_obs(self) -> np.array:
+        grid = self._get_grid_with_rob()
+        grid2 = vchar_to_pixel(grid)
+        grid3 = np.stack(grid2)
+        return grid3
+
+    def _get_dest(self, action):
         assert action in [0, 1, 2, 3], f"Action {action} not valid"
         displacements = {
             0: np.array([-1, 0]),
@@ -251,85 +260,78 @@ class Grid(BaseEnv):
             3: np.array([0, -1])
         }
         (y, x) = np.array([self.rob.y, self.rob.x]) + displacements[action]
-        if self.is_loc_in_bounds(y, x) and self.grid[y, x] in self.passable_objects:
+        if self._is_loc_in_bounds(y, x) and self.grid[y, x] in self.passable_objects:
             return (y, x)
         else:
             return None
 
-    def is_loc_in_bounds_tuple(self, loc: (int, int)) -> bool:
-        return self.is_loc_in_bounds(*loc)
+    def _is_loc_in_bounds_tuple(self, loc: (int, int)) -> bool:
+        return self._is_loc_in_bounds(*loc)
 
-    def is_loc_in_bounds(self, y: int, x: int) -> bool:
+    def _is_loc_in_bounds(self, y: int, x: int) -> bool:
         return (0 <= x < self.width) and (0 <= y < self.height)
 
 
 # TODO: Redo non-museum grids
-class EmptyGrid(Grid):
-    def get_vase_locations(self) -> list:
-        return []
-
-    def get_new_dirt_locations(self):
-        return []
-
-    def get_new_wall_and_door_locations(self):
-        return [], []
-
+class SimpleGrid(Grid):
     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return [], [], *self._get_simple_dirts_and_vases()
 
-class EmptyGrid1D(EmptyGrid):
+    def _get_simple_dirts_and_vases(self, num_dirts: int = 0, num_vases: int = 0, random: bool = True):
+        num_objs = num_dirts + num_vases
+        if random:
+            ys = np.random.choice(list(range(self.height)), size=num_objs)
+            xs = np.random.choice(list(range(self.width)), size=num_objs)
+            locs = list(set(zip(ys, xs)) - {self.player_init, self.goal_loc})
+            dirts = locs[0:num_dirts]
+            vases = locs[num_dirts:]
+            return dirts, vases
+        else:
+            if num_dirts == 5 and num_vases == 0:
+                h = self.height
+                w = self.width
+                dirt_locs = [
+                    (h - 1, 0),
+                    (0, w - 1),
+                    (int(h / 2), int(w / 2)),
+                    (int(h - 1), int(w / 2)),
+                    (int(h / 2), int(w - 1))
+                ]
+                return dirt_locs, []
+            else:
+                raise NotImplementedError()
+
+
+class EmptyGrid1D(SimpleGrid):
     def __init__(self):
         super().__init__(height=1, width=5, player_init=(0, 0), goal_loc=None)
 
 
-class TinyEmptyGrid(EmptyGrid):
+class TinyEmptyGrid(SimpleGrid):
     def __init__(self, height=3, width=4, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
 
-class SmallEmptyGrid(EmptyGrid):
+class SmallEmptyGrid(SimpleGrid):
     def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
 
-class DirtGrid(Grid):
-    def get_vase_locations(self) -> list:
-        return []
-
+class DirtGrid(SimpleGrid):
     def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
-    def get_new_wall_and_door_locations(self):
-        return [], []
-
-    def get_new_dirt_locations(self):
-        h = self.height
-        w = self.width
-        locs = [
-            (h - 1, 0),
-            (0, w - 1),
-            (int(h / 2), int(w / 2)),
-            (int(h - 1), int(w / 2)),
-            (int(h / 2), int(w - 1))
-        ]
-        return locs
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=False)
 
 
 class RandDirtGrid(DirtGrid):
 
-    def get_object_locations_WDDV(self) -> (list, list, list, list):
-        return [], [], self.get_new_dirt_locations(), []
-
-    def get_new_dirt_locations(self, num_dirts=5):
-        h = self.height
-        w = self.width
-        locs = []
-        while locs == [] or self.player_init in locs or self.goal_loc in locs:
-            ys = np.random.randint(low=0, high=h, size=num_dirts)
-            xs = np.random.randint(low=0, high=w, size=num_dirts)
-            locs = list(zip(ys, xs))
-        return locs
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=True)
 
 
 class SmallRandDirtGrid(RandDirtGrid):
@@ -338,17 +340,25 @@ class SmallRandDirtGrid(RandDirtGrid):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
 
-class WallGrid(Grid):
-    def get_vase_locations(self) -> list:
-        return []
+class VaseGrid(SimpleGrid):
 
     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
-    def get_new_dirt_locations(self):
-        return []
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return [], [], *self._get_simple_dirts_and_vases(num_dirts=0,
+                                                         num_vases=int(self.height * self.width / 10),
+                                                         random=True)
 
-    def get_new_wall_and_door_locations(self):
+
+class WallGrid(Grid):
+    def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
+        super().__init__(height, width, player_init, goal_loc, max_steps)
+
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return *self._get_new_wall_and_door_locations(), [], []
+
+    def _get_new_wall_and_door_locations(self):
         h = self.height
         w = self.width
         wall_xs = range(1, w - 2, 2)
@@ -361,9 +371,21 @@ class WallGrid(Grid):
         return locs, []
 
 
+class SimpleWallGrid(WallGrid):
+    def __init__(self):
+        super().__init__(height=6, width=5, player_init=(0, 0))
+
+    def _get_new_wall_and_door_locations(self):
+        h = self.height
+        locs = [(y, 2) for y in range(h)]
+        remove_ind = np.random.randint(len(locs))
+        locs.remove(locs[remove_ind])
+        return locs, []
+
+
 class SemiRandWallGrid(WallGrid):
 
-    def get_new_wall_and_door_locations(self):
+    def _get_new_wall_and_door_locations(self):
         h = self.height
         w = self.width
         wall_xs = range(1, w - 2, 2)
@@ -376,15 +398,12 @@ class SemiRandWallGrid(WallGrid):
         return locs, []
 
 
-class DoorGrid(SemiRandWallGrid):
+class DoorGrid(WallGrid):
 
     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
-    def get_new_dirt_locations(self):
-        return []
-
-    def get_new_wall_and_door_locations(self):
+    def _get_new_wall_and_door_locations(self):
         h = self.height
         w = self.width
         wall_xs = range(1, w - 2, 2)
@@ -397,20 +416,6 @@ class DoorGrid(SemiRandWallGrid):
             gap = door_ys[i]
             locs += [(y, x) for y in range(h) if y != gap]
         return locs, door_locs
-
-
-class VaseGrid(EmptyGrid):
-
-    def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-    def get_vase_locations(self):
-        num_vases = int(self.height * self.width / 10)
-        ys = np.random.choice(list(range(self.height)), size=num_vases)
-        xs = np.random.choice(list(range(self.width)), size=num_vases)
-        locs = set(zip(ys, xs))
-        locs = locs - {self.player_init, self.goal_loc}
-        return list(locs)
 
 
 class MuseumGrid(Grid):
@@ -456,7 +461,7 @@ class MuseumGrid(Grid):
         # wall_locations += [(y, x) for y in range(self.height) for x in vertical_boundary_xs]
         return wall_locations, door_locations
 
-    def get_object_locations_WDDV(self) -> (list, list, list, list):
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
         wall_locations, door_locations = self.get_new_wall_and_door_locations()
         dirt_locations, vase_locations = self.get_dirt_vase_locations()
         return wall_locations, door_locations, dirt_locations, vase_locations

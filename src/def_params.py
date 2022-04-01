@@ -1,4 +1,21 @@
+from src.custom_envs import Grid, BaseEnv
 from src.run_parameters import TrainParams
+import src.custom_envs
+
+ALL_ENVS = []
+ALL_GRIDS = []
+for thing_name in dir(src.custom_envs):
+    thing = getattr(src.custom_envs,thing_name)
+    try:
+        if issubclass(thing, BaseEnv):
+            ALL_ENVS.append(thing.__name__)
+            if issubclass(thing, Grid):
+                ALL_GRIDS.append(thing.__name__)
+    except Exception as e:
+        pass
+ALL_ENVS.remove("Grid")
+ALL_GRIDS.remove("Grid")
+
 
 SOME_AGENT_NAMES = [
     "RandomAgent",
@@ -14,7 +31,7 @@ SOME_ENV_NAMES = [
     "BanditEnv",
     "EmptyGrid1D",
     "SmallEmptyGrid",
-    "EmptyGrid",
+    "SimpleGrid",
     "DirtGrid",
     "RandDirtGrid",
     "WallGrid",
@@ -22,12 +39,24 @@ SOME_ENV_NAMES = [
     # "SemiRandDirtWallGrid"
 ]
 
-skein_dict = {
+SKEIN_DICT = {
 
     "temp": [
         TrainParams(
             env_name="DoorGrid",
             agent_name="QLearner",
+            num_episodes=100,
+            gamma=0.9,
+            is_test=True,
+            should_render=True,
+            should_debug=True
+        )
+    ],
+
+    "test_simple_wall_grid": [
+        TrainParams(
+            env_name="SimpleWallGrid",
+            agent_name="HumanAgent",
             num_episodes=100,
             gamma=0.9,
             is_test=True,
@@ -124,6 +153,17 @@ skein_dict = {
         ) for env_name in SOME_ENV_NAMES
     ],
 
+    "human_test_all_grids": [
+        TrainParams(
+            env_name=env_name,
+            agent_name="HumanAgent",
+            num_episodes=100,
+            gamma=0.9,
+            should_debug=False,
+            is_test=True
+        ) for env_name in ALL_GRIDS[2:]
+    ],
+
     "test_all_agents": list(reversed([
         TrainParams(
             env_name="SmallEmptyGrid",
@@ -150,11 +190,11 @@ skein_dict = {
         TrainParams(
             env_name="SmallRandDirtGrid",
             agent_name="DQN_CNN",
-            num_episodes=int(1e5),
+            num_episodes=int(1e6),
             gamma=0.9,
             epsilon=epsilon
         )
-        for epsilon in [0.01, 0.05, 0.1]
+        for epsilon in [0.05]  # [0.01, 0.05, 0.1]
     ],
 
     "DQN_on_MNIST": [
@@ -184,7 +224,17 @@ skein_dict = {
 
     "short_compare_on_empty_grid": [
         TrainParams(
-            env_name="EmptyGrid",
+            env_name="SimpleGrid",
+            agent_name=agent_name,
+            num_episodes=10000,
+            gamma=0.9,
+            should_debug=False
+        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+    ],
+
+    "short_compare_on_simple_wall_grid": [
+        TrainParams(
+            env_name="SimpleWallGrid",
             agent_name=agent_name,
             num_episodes=10000,
             gamma=0.9,
