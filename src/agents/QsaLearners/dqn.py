@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 from src.agents.QsaLearners.qsalearner import QsaLearner
-from src.agents.networks import DNN, CNN
+from src.agents.networks import DNN, CNN, CNN2, CNN3
 from src.agents.QsaLearners.replay_buffer import ReplayBuffer
 from src.run_parameters import TrainParams
 from src.generic_utils import vectorise_state, imageify_state
@@ -60,7 +60,7 @@ class DQN(QsaLearner):
         next_state = self.preprocess_state(next_state)
         self._memory.add(state, action, reward, next_state, done)
         self._num_steps_since_update += 1
-        if self._num_steps_since_update%self._update_freq == 0:
+        if self._num_steps_since_update % self._update_freq == 0:
             self.update()
 
     def update(self):
@@ -104,7 +104,7 @@ class DQN(QsaLearner):
         # print(Qs)
         # print("State-action pairs from update")
         # print([(int(a), float(tar)) for (a, tar) in zip(list(actions), list(targets))])
-        print("loss ", loss, "="*80)
+        print("loss ", loss, "=" * 80)
 
     def _Q_to_string(self):
         return str(self._Q_net)
@@ -112,6 +112,22 @@ class DQN(QsaLearner):
 
 class DQN_CNN(DQN):
     NETWORK_CLASS = CNN
+
+    @staticmethod
+    def preprocess_state(state):
+        return imageify_state(state)
+
+
+class DQN_CNN2(DQN):
+    NETWORK_CLASS = CNN2
+
+    @staticmethod
+    def preprocess_state(state):
+        return imageify_state(state)
+
+
+class DQN_CNN3(DQN):
+    NETWORK_CLASS = CNN3
 
     @staticmethod
     def preprocess_state(state):

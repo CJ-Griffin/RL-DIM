@@ -132,15 +132,20 @@ def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
 
 
 def save_recordings(nept_log: neptune.Run, recordings: dict[list[np.array]]):
-    # dir_name = f"logs/episode_gifs/{skein_id}/{np.random.randint(1000)}"
-    # os.mkdir(dir_name)
+    dir_name = f"logs/episode_gifs/{np.random.randint(100000)}"
+    os.mkdir(dir_name)
     for ep_no, recording in recordings.items():
         _, h, w = recording[0].shape
         for frame in recording:
             assert frame.shape == (3, h, w), frame.shape
         recording_scaled = [frame * 255 for frame in recording]
-        # path = f"{dir_name}/ep{ep_no}.gif"
-        path = f"logs/episode_gifs/temp.gif"
+        N = len(recording_scaled)
+        for i in range(N):
+            factor = 0.2 + (0.8*i/N)
+            new = recording_scaled[i][:, -1, -1].astype('float64') * factor
+            new = new.astype('int64')
+            recording_scaled[i][:, -1, -1] = new
+        path = f"{dir_name}/temp{ep_no}.gif"
         write_gif(recording_scaled, path, fps=5)
         nept_log[f"ep_gifs/ep{ep_no}"].upload(path)
 

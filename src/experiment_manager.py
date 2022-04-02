@@ -59,7 +59,12 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
             run_episode(agent, env, should_render=True)
 
     if params.agent_name == "HumanAgent":
+        env.start_recording()
         run_episode(agent, env, should_render=True)
+        env.stop_and_log_recording(0)
+        env.start_recording()
+        run_episode(agent, env, should_render=True)
+        env.stop_and_log_recording(0)
 
     if nept_log is not None:
         recordings = env.get_recordings()
@@ -78,7 +83,6 @@ def run_eval(agent: Agent,
                           env=env,
                           num_episodes=num_episodes,
                           nept_log=None,
-                          episode_record_interval=num_episodes // 20,
                           is_eval=True)
 
     return float(np.mean(scores))
@@ -88,14 +92,13 @@ def run_episodic(agent: Agent,
                  env: gym.Env,
                  num_episodes: int,
                  nept_log: neptune.Run,
-                 episode_record_interval: int = 1000,
                  is_eval: bool = False):
     episode_scores = []
 
     ep_iter = tqdm(range(num_episodes))
 
     for ep_num in ep_iter:
-        if ep_num % episode_record_interval == 0:
+        if str(ep_num)[1:] in "0"*20:
             env.start_recording()
 
         info = run_episode(agent, env)
@@ -108,14 +111,13 @@ def run_episodic(agent: Agent,
             for i in range(0,5):
                 nept_log[f"action_freqs/{i}"].log(action_freqs[i])
 
-        if ep_num % episode_record_interval == 0:
+        if str(ep_num)[1:] in "0"*20:
             env.stop_and_log_recording((-ep_num if is_eval else ep_num))
 
         if ep_num % 1000 == 0:
             ep_iter.set_description(f"AS = {np.mean(episode_scores[-1000:])}")
 
     return episode_scores
-
 
 
 def run_episode(agent: Agent,

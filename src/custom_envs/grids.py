@@ -10,13 +10,16 @@ from src.custom_envs.base_env import BaseEnv
 
 CHAR_TO_PIXEL = {
     ' ': (0, 0, 0),  # Empty space
-    'R': (1, 1, 1),  # Robot
-    'G': (0, 1, 0),  # Goal
     '#': (0, 0, 1),  # Wall
-    '.': (1, 0, 0),  # Dirt
-    '|': (0, 0, 1),  # Closed door
-    '/': (0, 1, 1),  # Open door
-    'V': (1, 0, 1)  # Vase
+
+    'G': (0, 1, 0),  # Goal
+    'V': (0, 1, 1),  # Vase
+
+    '/': (1, 0, 0),  # Open door
+    '|': (1, 0, 1),  # Closed door
+
+    '.': (1, 1, 0),  # Dirt
+    'R': (1, 1, 1),  # Robot
 }
 
 CHAR_TO_EMOJI = {
@@ -72,13 +75,16 @@ def np_grid_to_string(grid: np.array, should_emojify=False):
 
 class Grid(BaseEnv):
     def __init__(self, height, width, player_init,
-                 goal_loc=None, max_steps=100, dirt_value=1.0):
+                 goal_loc=None, max_steps=100, dirt_value=1.0,
+                 init_door_state: str = "closed"):
         if goal_loc is None:
             goal_loc = (height - 1, width - 1)
         self.goal_loc = goal_loc
         self.max_steps = max_steps
         self.dirt_value = dirt_value
         self.elapsed_steps = 0
+
+        self.init_door_state = init_door_state
 
         self.action_space = gym.spaces.Discrete(5)
         self.observation_space = gym.spaces.Box(
@@ -133,8 +139,9 @@ class Grid(BaseEnv):
         for wall_loc in wall_locations:
             arr[wall_loc] = '#'
 
+        door_char = '/' if self.init_door_state == "open" else "|"
         for wall_loc in door_locations:
-            arr[wall_loc] = '|'
+            arr[wall_loc] = door_char
 
         for dirt_loc in dirt_locations:
             arr[dirt_loc] = '.'
@@ -142,8 +149,12 @@ class Grid(BaseEnv):
         for vase_loc in vase_locations:
             arr[vase_loc] = 'V'
 
-        arr[self.goal_loc] = 'G'
+        if self.goal_loc != -1:
+            arr[self.goal_loc] = 'G'
         return arr
+
+    def _get_has_won(self):
+        return False
 
     # ========== # ========== # - Public fixed methods - # ========== # ========== #
 
@@ -160,6 +171,7 @@ class Grid(BaseEnv):
         self.player_init = self._get_new_player_init()
         self.rob.y, self.rob.x = self.player_init
         self.goal_loc = self._get_new_goal_loc()
+        self.grid = self._get_init_grid()
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
         self.elapsed_steps = 0
         if self._is_recording:
@@ -194,9 +206,12 @@ class Grid(BaseEnv):
             if is_interact:
                 self._do_interactions()
 
+        if not has_won:
+            has_won = self._get_has_won()
+
         obs = self._get_obs()
         reward = (int(gets_dirt) * self.dirt_value) + \
-                 (-0.1 * (dest is None and not is_interact)) + \
+                 (-0.01 * (dest is None and not is_interact)) + \
                  (10 * has_won)
         self._last_reward = reward
         done = (self.elapsed_steps >= self.max_steps) or has_won
@@ -210,6 +225,7 @@ class Grid(BaseEnv):
         self._is_recording = True
 
     def stop_and_log_recording(self, episode_number: int) -> None:
+        assert self._is_recording
         self._is_recording = False
         self._recordings[episode_number] = self._im_history
         self._im_history = []
@@ -334,6 +350,20 @@ class RandDirtGrid(DirtGrid):
         return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=True)
 
 
+class CleanIt(RandDirtGrid):
+    def __init__(self):
+        super().__init__(goal_loc=-1)
+
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        return [], [], *self._get_simple_dirts_and_vases(num_dirts=10, random=True)
+
+    def _get_has_won(self):
+        return not (self.grid == ".").any()
+
+    def _get_new_goal_loc(self) -> (int, int):
+        return -1
+
+
 class SmallRandDirtGrid(RandDirtGrid):
 
     def __init__(self, height=3, width=5, player_init=(0, 0), goal_loc=None, max_steps=100):
@@ -420,7 +450,9 @@ class DoorGrid(WallGrid):
 
 class MuseumGrid(Grid):
 
-    def __init__(self, room_size=3, num_rooms_wide=2):
+    def __init__(self, room_size=3,
+                 num_rooms_wide=2,
+                 init_door_state: str = "open"):
         self.room_size = room_size
         self.num_rooms_wide = num_rooms_wide
         width = ((self.room_size + 1) * (self.num_rooms_wide)) + 1
@@ -430,9 +462,10 @@ class MuseumGrid(Grid):
         super().__init__(height,
                          width,
                          player_init,
-                         goal_loc=(height - 2, width - 2),
+                         goal_loc=-1,
                          max_steps=100,
-                         dirt_value=1.0)
+                         dirt_value=1.0,
+                         init_door_state=init_door_state)
 
     def get_new_wall_and_door_locations(self) -> (list, list):
         outer_boundaries = \
@@ -489,6 +522,9 @@ class MuseumGrid(Grid):
             vases += locs[0:vases_per_room]
             dirts += locs[vases_per_room:]
         return dirts, vases
+
+    def _get_has_won(self):
+        return not (self.grid == ".").any()
 
 
 class SmallMuseumGrid(MuseumGrid):

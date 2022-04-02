@@ -130,3 +130,4 @@ dmypy.json
 /temp_tests/
 /.neptune/
 /mnist_experiments/data/
+/src/more_skein_definitions/
