@@ -29,15 +29,15 @@ class ReplayBuffer(object):
         for i in idxes:
             data = self._memory[i]
             state, action, reward, next_state, done = data
-            states.append(np.array(state, copy=False))
+            states.append(state)
             actions.append(action)
             rewards.append(reward)
-            next_states.append(np.array(next_state, copy=False))
+            next_states.append(next_state)
             dones.append(done)
-        s = torch.tensor(states, dtype=torch.float, device=device)
+        s = torch.stack(states).float().to(device)
         a = torch.tensor(actions, dtype=torch.long, device=device)
         r = torch.tensor(rewards, dtype=torch.float, device=device)
-        s2 = torch.tensor(next_states, dtype=torch.float, device=device)
+        s2 = torch.stack(next_states).float().to(device)
         d = torch.tensor(dones, dtype=torch.bool, device=device)
         return s, a, r, s2, d
 
