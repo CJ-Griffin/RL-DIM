@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+import torch
 
 import gym
 from src.run_parameters import TrainParams
@@ -16,6 +17,7 @@ class Agent(ABC):
                  state_space: gym.Space,
                  params: TrainParams):
         self.check_compatibility(action_space=action_space, state_space=state_space)
+        self._params = params
         self._action_space = action_space
         self._state_space = state_space
         self._should_debug = params.should_debug
@@ -60,3 +62,15 @@ class Agent(ABC):
             raise Exception(f"Model ({self}) is not compatible with infinite action space ({action_space})")
         elif self.REQUIRES_FINITE_STATE_SPACE and not is_space_finite(state_space):
             raise Exception(f"Model ({self}) is not compatible with infinite state space ({state_space})")
+
+    def save(self, path: str):
+        torch.save(self, path)
+
+    def get_unique_name(self) -> str:
+        an = self._params.agent_name
+        env = self._params.env_name
+        return f"{an}_{env}_{self._unique_ID}"
+
+    def update_state_action_spaces(self,  state_space: gym.Space, action_space: gym.Space):
+        self._action_space = action_space
+        self._state_space = state_space

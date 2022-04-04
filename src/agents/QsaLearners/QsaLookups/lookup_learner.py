@@ -1,6 +1,9 @@
 import gym
 from src.agents.QsaLearners.qsalearner import QsaLearner
 from src.run_parameters import TrainParams
+import xxhash
+import collections
+import numpy as np
 
 
 class LookupLearner(QsaLearner):
@@ -13,6 +16,7 @@ class LookupLearner(QsaLearner):
         self._Q = {}
         self._Q_count = {}
         self._Q_hash_dict = {}
+        self._state_hasher = xxhash.xxh64()
 
     def _init_Q_s(self, state):
         new_state = self.get_hashable_state(state)
@@ -51,3 +55,22 @@ class LookupLearner(QsaLearner):
 
     def should_update(self, done: bool) -> bool:
         raise NotImplementedError
+
+    def get_hashable_state(self, state):
+        if not isinstance(state, collections.Hashable):
+            # If the state is mutable, hash it instead
+            if isinstance(state, np.ndarray):
+                # check whether it is a 1D, small shape
+                # if state.size in list(range(10)):
+                #     print(state)
+                #     print(state.shape)
+                #     state = tuple(list(state))
+                #     print(state)
+                # else:
+                self._state_hasher.reset()
+                self._state_hasher.update(state)
+                state = self._state_hasher.digest()
+                self._state_hasher.reset()
+            else:
+                raise NotImplementedError(state)
+        return state

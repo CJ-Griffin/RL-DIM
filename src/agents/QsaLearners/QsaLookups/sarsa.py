@@ -7,7 +7,8 @@ class SARSA(LookupLearner):
         return len(self._memory) >= self._batch_size
 
     def update(self):
-        states, actions, rewards, next_states, dones = self._memory.sample(sample_all=True)
+        states, actions, rewards, next_states, dones = self._memory.sample(sample_all=True,
+                                                                           as_torch=False)
         # N = len(states)
         for i, (s, a, r, sn, d) in enumerate(zip(states, actions, rewards, next_states, dones)):
             if not d and i != self._batch_size - 1:

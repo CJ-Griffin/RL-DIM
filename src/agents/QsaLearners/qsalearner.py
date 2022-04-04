@@ -1,7 +1,4 @@
-import collections
-
 import numpy as np
-import xxhash
 from src.agents.agent import Agent
 import gym
 from src.run_parameters import TrainParams
@@ -27,7 +24,6 @@ class QsaLearner(Agent):
         self._allowed_actions = get_action_list(self._action_space)
         self._memory = LinearMemory(buffer_size=self._buffer_size,
                                     batch_size=self._batch_size)
-        self._state_hasher = xxhash.xxh64()
 
     def act(self, state):
         assert state in self._state_space, (state, self._state_space)
@@ -37,25 +33,6 @@ class QsaLearner(Agent):
             return self._action_space.sample()
         else:
             return self.get_greedy_action(state)
-
-    def get_hashable_state(self, state):
-        if not isinstance(state, collections.Hashable):
-            # If the state is mutable, hash it instead
-            if isinstance(state, np.ndarray):
-                # check whether it is a 1D, small shape
-                # if state.size in list(range(10)):
-                #     print(state)
-                #     print(state.shape)
-                #     state = tuple(list(state))
-                #     print(state)
-                # else:
-                self._state_hasher.reset()
-                self._state_hasher.update(state)
-                state = self._state_hasher.digest()
-                self._state_hasher.reset()
-            else:
-                raise NotImplementedError(state)
-        return state
 
     @abstractmethod
     def get_greedy_action(self, state):

@@ -11,7 +11,8 @@ class TabularMC(LookupLearner):
 
     # To be called only when self._memory has > self._batch_size items
     def update(self):
-        states, actions, rewards, next_states, dones = self._memory.sample(sample_all=True)
+        states, actions, rewards, next_states, dones = self._memory.sample(sample_all=True,
+                                                                           as_torch=False)
         assert int(dones[-1]) == 1, dones
         assert not np.any(dones[:-2]), dones
         T = len(rewards)

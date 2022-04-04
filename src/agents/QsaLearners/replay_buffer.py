@@ -29,10 +29,10 @@ class ReplayBuffer(object):
         for i in idxes:
             data = self._memory[i]
             state, action, reward, next_state, done = data
-            states.append(np.array(state[0], copy=False))
+            states.append(np.array(state, copy=False))
             actions.append(action)
             rewards.append(reward)
-            next_states.append(np.array(next_state[0], copy=False))
+            next_states.append(np.array(next_state, copy=False))
             dones.append(done)
         s = torch.tensor(states, dtype=torch.float, device=device)
         a = torch.tensor(actions, dtype=torch.long, device=device)
@@ -77,7 +77,7 @@ class LinearMemory:
         else:
             states = torch.from_numpy(np.vstack(states)).float().to(device)
             actions = torch.from_numpy(np.vstack(actions)).long().to(device)
-            rewards = torch.from_numpy(np.vstack(rewards)).float().to(device)
+            rewards = torch.tensor(rewards).float().to(device)
             next_states = torch.from_numpy(np.vstack(next_states)).float().to(device)
-            dones = torch.from_numpy(np.vstack(dones)).bool().to(device)
+            dones = torch.tensor(dones).bool().to(device)
             return states, actions, rewards, next_states, dones

@@ -1,3 +1,5 @@
+import neptune.new
+
 import gym
 import torch
 import numpy as np
@@ -17,12 +19,11 @@ class DQN(QsaLearner):
     def preprocess_state(state):
         return vectorise_state(state)
 
-    def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
+    def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams, existing_model=None):
         super().__init__(action_space, state_space, params)
+        self._params = params # Keep this around for saving the model
         self._update_freq = params.update_freq
         self._num_steps_since_update = 0
-
-        self._alpha = params.alpha
         self._memory = ReplayBuffer(self._buffer_size)
 
         self._Q_net = self.NETWORK_CLASS(state_space=self._state_space, action_space=self._action_space)
@@ -34,10 +35,8 @@ class DQN(QsaLearner):
 
     def get_greedy_action(self, state):
         state = self.preprocess_state(state)
-        x = (torch.tensor(state)).float()
-        if x.shape == torch.Size([]):
-            x = x.reshape(1)
-        Qs = self._Q_net(x)
+        x = state
+        Qs = self._Q_net(x.unsqueeze(0))
         a = int(Qs.argmax())
         if self._should_debug:
             p = 1e-1
@@ -58,6 +57,7 @@ class DQN(QsaLearner):
 
         state = self.preprocess_state(state)
         next_state = self.preprocess_state(next_state)
+        # print(state, next_state)
         self._memory.add(state, action, reward, next_state, done)
         self._num_steps_since_update += 1
         if self._num_steps_since_update % self._update_freq == 0:

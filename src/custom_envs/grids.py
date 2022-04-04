@@ -61,6 +61,8 @@ class Robot:
 
 
 def np_grid_to_string(grid: np.array, should_emojify=False):
+    if grid is None:
+        return "Not yet initialised"
     if should_emojify:
         f = char_to_emoji
     else:
@@ -74,15 +76,22 @@ def np_grid_to_string(grid: np.array, should_emojify=False):
 
 
 class Grid(BaseEnv):
-    def __init__(self, height, width, player_init,
+    def __init__(self,
+                 height,
+                 width,
+                 player_init,
                  goal_loc=None, max_steps=100, dirt_value=1.0,
-                 init_door_state: str = "closed"):
+                 init_door_state: str = "closed",
+                 ):
         if goal_loc is None:
             goal_loc = (height - 1, width - 1)
         self.goal_loc = goal_loc
         self.max_steps = max_steps
         self.dirt_value = dirt_value
         self.elapsed_steps = 0
+
+        self.mu = Exception("This should have been changed")
+        self.dist_measure = Exception("This should have been changed")
 
         self.init_door_state = init_door_state
 
@@ -102,10 +111,12 @@ class Grid(BaseEnv):
         self._recordings = {}
 
         self.rob = Robot(*player_init)
-        self.grid = self._get_init_grid()
+        self.grid = None
+        self.s0_grid = None
+        self.vases_smashed = None
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
-        self.grid_s0_history = self.grid.copy()
-        self._last_reward = None
+        self._last_spec_reward = None
+        self._last_dist_reward = None
         self.passable_objects = [' ', '.', 'G', '/', 'V']
 
     # ========== # ========== # - Generating new Grids - # ========== # ========== #
@@ -162,7 +173,8 @@ class Grid(BaseEnv):
         grid = self._get_grid_with_rob()
         print("\n--- GridEnv ---")
         print(np_grid_to_string(grid, should_emojify=False))
-        print(f"Last reward: {self._last_reward}")
+        print(f"Last spec reward: {self._last_spec_reward}")
+        print(f"Last dist reward: {self._last_dist_reward}")
         print("---  ======== ---")
         print()
 
@@ -172,7 +184,9 @@ class Grid(BaseEnv):
         self.rob.y, self.rob.x = self.player_init
         self.goal_loc = self._get_new_goal_loc()
         self.grid = self._get_init_grid()
+        self.s0_grid = self.grid.copy()
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
+        self.vases_smashed = 0
         self.elapsed_steps = 0
         if self._is_recording:
             self._record_step()
@@ -180,6 +194,7 @@ class Grid(BaseEnv):
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         self.elapsed_steps += 1
+        s_t = self.grid.copy()
         if action != 4:
             dest = self._get_dest(action)
             is_interact = False
@@ -209,16 +224,23 @@ class Grid(BaseEnv):
         if not has_won:
             has_won = self._get_has_won()
 
+        s_tp1 = self.grid
+
+        dist_reward = - self.mu * self._get_dist_term(s_t, s_tp1)
+
         obs = self._get_obs()
-        reward = (int(gets_dirt) * self.dirt_value) + \
-                 (-0.01 * (dest is None and not is_interact)) + \
-                 (10 * has_won)
-        self._last_reward = reward
+        spec_reward = (int(gets_dirt) * self.dirt_value) + \
+                      (-0.01 * (dest is None and not is_interact)) + \
+                      (10 * has_won)
+        if destroys_vase:
+            self.vases_smashed += 1
+        self._last_spec_reward = spec_reward
+        self._last_dist_reward = dist_reward
         done = (self.elapsed_steps >= self.max_steps) or has_won
         info = {}
         if self._is_recording:
             self._record_step()
-        return obs, reward, done, info
+        return obs, spec_reward + dist_reward, done, info
 
     def start_recording(self):
         assert not self._is_recording
@@ -232,6 +254,13 @@ class Grid(BaseEnv):
 
     def get_recordings(self) -> dict[list[np.array]]:
         return self._recordings
+
+    def init_dist_measure(self, dist_measure_name: str, mu: float):
+        self.dist_measure = self._get_distance_measure(dist_measure_name)
+        self.mu = mu
+
+    def get_vases_smashed(self):
+        return self.vases_smashed
 
     # ========== # ========== # - Private fixed methods - # ========== # ========== #
     def _record_step(self):
@@ -257,9 +286,12 @@ class Grid(BaseEnv):
             self.grid[y, x] = '|'
 
     def _get_grid_with_rob(self):
-        grid = self.grid.copy()
-        grid[self.rob.y, self.rob.x] = 'R'
-        return grid
+        if self.grid is not None:
+            grid = self.grid.copy()
+            grid[self.rob.y, self.rob.x] = 'R'
+            return grid
+        else:
+            return None
 
     def _get_obs(self) -> np.array:
         grid = self._get_grid_with_rob()
@@ -286,6 +318,35 @@ class Grid(BaseEnv):
 
     def _is_loc_in_bounds(self, y: int, x: int) -> bool:
         return (0 <= x < self.width) and (0 <= y < self.height)
+
+    def _get_dist_term(self, s_t: np.ndarray, s_tp1: np.ndarray) -> float:
+        d_t = self.dist_measure(self.s0_grid, s_t)
+        d_tp1 = self.dist_measure(self.s0_grid, s_tp1)
+        return d_tp1 - d_t
+
+    def _get_distance_measure(self, name: str):
+        dct = {
+            "null": self._null_distance,
+            "simple": self._simple_distance,
+            "vase": self._vase_distance,
+        }
+        if name not in dct.keys():
+            erstr = f"Distance measure named {name} not defined in {list(dct.keys())}"
+            raise KeyError(erstr)
+        return dct[name]
+
+    def _null_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
+        return 0.0
+
+    def _simple_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
+        diffs = (s1 != s2)
+        diff_sum = np.sum(diffs)
+        return float(diff_sum)
+
+    def _vase_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
+        n1 = np.sum('V' != s1)
+        n2 = np.sum('V' != s2)
+        return float(np.abs(n1 - n2))
 
 
 # TODO: Redo non-museum grids
@@ -453,11 +514,9 @@ class MuseumGrid(Grid):
     def __init__(self, room_size=3,
                  num_rooms_wide=2,
                  init_door_state: str = "open"):
-        self.room_size = room_size
-        self.num_rooms_wide = num_rooms_wide
-        width = ((self.room_size + 1) * (self.num_rooms_wide)) + 1
+        width = ((room_size + 1) * num_rooms_wide) + 1
         height = width
-        player_init = (1, 1)  # (int(height/2), int(width/2))
+        player_init = (1, 1)
 
         super().__init__(height,
                          width,
@@ -466,6 +525,8 @@ class MuseumGrid(Grid):
                          max_steps=100,
                          dirt_value=1.0,
                          init_door_state=init_door_state)
+        self.room_size = room_size
+        self.num_rooms_wide = num_rooms_wide
 
     def get_new_wall_and_door_locations(self) -> (list, list):
         outer_boundaries = \

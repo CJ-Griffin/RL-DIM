@@ -46,7 +46,6 @@ SKEIN_DICT = {
             agent_name=an,
             num_episodes=int(1e5),
             gamma=0.9,
-            is_test=True,
         ) for an in ["DQN_CNN", "DQN_CNN2", "DQN_CNN3"]
     ],
 
@@ -96,25 +95,43 @@ SKEIN_DICT = {
         #  "DQN_CNN"]  # SOME_AGENT_NAMES if an != "HumanAgent"
     ],
 
-    "MuseumGridTrain": [
+    "MuseumGridTestTraining": [
         TrainParams(
             env_name="MuseumGrid",
             agent_name=an,
             num_episodes=int(2e3),
             gamma=0.9,
             is_test=True,
-        ) for an in ["DQN"]
+        ) for an in ["DQN", "RandomAgent"]
     ],
 
-    "test_all_envs": [
+    "test_all_envs_and_agents": [
         TrainParams(
             env_name=env_name,
-            agent_name="TabularMC",
+            agent_name=agent_name,
             num_episodes=100,
             gamma=0.9,
             should_debug=False,
-            is_test=True
-        ) for env_name in SOME_ENV_NAMES
+            is_test=True,
+            should_skip_neptune=True
+        )
+        for env_name in ALL_ENVS if env_name != "BaseEnv"
+        for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+    ],
+
+    "human_test_dist_measures": [
+        TrainParams(
+            env_name="SmallMuseumGrid",
+            agent_name="HumanAgent",
+            num_episodes=100,
+            gamma=0.9,
+            should_debug=False,
+            is_test=True,
+            dist_measure_name=dmn,
+            mu=mu
+        )
+        for dmn in ["null", "simple", "vase"]
+        for mu in [-0.1, 10.0]
     ],
 
     "human_test_all_grids": [
@@ -157,24 +174,23 @@ SKEIN_DICT = {
             num_episodes=int(1e4),
             gamma=0.9,
             epsilon=epsilon,
-            # should_debug=True
+            # should_debug=True,
+            is_test=True
         )
         for epsilon in [0.05]  # [0.01, 0.05, 0.1]
     ],
 
-    "TinyEmptyGrid_DQN_HyperParamSearch": [
+    "test_loading": [
         TrainParams(
             env_name="TinyEmptyGrid",
-            agent_name="DQN",
-            num_episodes=int(1e3),
+            agent_name="save.RLYP-742_9999",
+            num_episodes=int(1e4),
             gamma=0.9,
-            batch_size=batch_size,
-            buffer_size=buffer_size,
-            update_freq=update_freq
+            epsilon=epsilon,
+            # should_debug=True,
+            is_test=True
         )
-        for batch_size in [4, 16, 64]
-        for buffer_size in [int(1e3), int(1e4), int(1e5)]
-        for update_freq in [int(1e1), int(1e2), int(1e3)]
+        for epsilon in [0.05]  # [0.01, 0.05, 0.1]
     ],
 
     "DQN_on_MNIST": [
@@ -184,7 +200,6 @@ SKEIN_DICT = {
             num_episodes=1e6,
             gamma=0.9,
             should_debug=False,
-            is_test=False,
             should_skip_neptune=False
         ) for a in ["DQN_CNN"]
     ],

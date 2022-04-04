@@ -64,26 +64,14 @@ def vectorise_state(state: gym.core.ActType) -> torch.Tensor:
 
 def imageify_state(state) -> torch.Tensor:
     if isinstance(state, int):
-        return np.ones((1, 3, 10, 10)) * state
+        return torch.ones((3, 10, 10)) * state
     elif isinstance(state, list) or isinstance(state, np.ndarray):
-        state = torch.tensor(state).float()
-        if len(state.shape) == 3:
-            state = state.unsqueeze(0)
-        if state.shape[1] == 3:
-            return state
-        else:
-            raise NotImplementedError
-        # print(torch.tensor(state).shape)
-        # image = torch.tensor(state).transpose(0,2).float().unsqueeze(0)
-        # assert(image.shape[1] == 3), image.shape
-        # return image
-    # elif isinstance(state, np.ndarray):
-    #     raise NotImplementedError(state)
+        return imageify_state(torch.tensor(state).float())
     elif isinstance(state, torch.Tensor):
         if len(state.shape) == 3 and state.shape[0] == 3:
-            return state.unsqueeze(0)
-        if len(state.shape) == 4 and state.shape[1] == 3:
             return state
+        else:
+            raise NotImplementedError(state.shape)
     else:
         raise NotImplementedError(state)
 
@@ -141,7 +129,7 @@ def save_recordings(nept_log: neptune.Run, recordings: dict[list[np.array]]):
         recording_scaled = [frame * 255 for frame in recording]
         N = len(recording_scaled)
         for i in range(N):
-            factor = 0.2 + (0.8*i/N)
+            factor = 0.2 + (0.8 * i / N)
             new = recording_scaled[i][:, -1, -1].astype('float64') * factor
             new = new.astype('int64')
             recording_scaled[i][:, -1, -1] = new
@@ -198,3 +186,5 @@ def is_space_finite(space: gym.Space) -> bool:
         return np.all(are_spaces_finite)
 
     raise NotImplementedError("I don't know how to handle this yet", space)
+
+
