@@ -3,7 +3,8 @@ import gym
 import numpy as np
 import emoji
 from gym.core import ObsType, ActType
-
+from termcolor import colored
+from colorama import Back, Fore
 from src.custom_envs.base_env import BaseEnv
 
 # from src.utils import are_sets_independent
@@ -22,6 +23,20 @@ CHAR_TO_PIXEL = {
     'R': (1, 1, 1),  # Robot
 }
 
+CHAR_TO_WORD = {
+    ' ': "empty space",  # Empty space
+    '#': "wall",  # Wall
+
+    'G': "goal",  # Goal
+    'V': "vase",  # Vase
+
+    '/': "open door",  # Open door
+    '|': "closed door",  # Closed door
+
+    '.': "dirt",  # Dirt
+    'R': "robot",  # Robot
+}
+
 CHAR_TO_EMOJI = {
     ' ': " ",  # Empty space
     'R': ":robot:",  # Robot
@@ -33,11 +48,41 @@ CHAR_TO_EMOJI = {
     'V': ":amphora:"  # Vase
 }
 
+CHAR_TO_COLOUR_OPEN = {
+    ' ': "white",  # Empty space
+    '#': "blue",  # Wall
 
-# '': np.array([0,0,0]),
-# 'R': np.array([1,0,0]),
-# '#': np.array([0,0,1]),
-# 'G': np.array([0,1,0]),
+    'G': "green",  # Goal
+    'V': "cyan",  # Vase
+
+    '/': "red",  # Open door
+    '|': "magenta",  # Closed door
+
+    '.': "yellow",  # Dirt
+    'R': "white",  # Robot
+}
+
+CHAR_TO_COLOUR_STRING = dict([
+    (k, "\033[1m" + colored(k, CHAR_TO_COLOUR_OPEN[k]) + "\033[0m")
+    for k in CHAR_TO_COLOUR_OPEN.keys()])
+
+CHAR_TO_COLOUR_BG_OPEN = {
+    ' ': Back.BLACK,  # Empty space
+    '#': Back.BLUE,  # Wall
+
+    'G': Back.GREEN,  # Goal
+    'V': Back.CYAN,  # Vase
+
+    '/': Back.RED,  # Open door
+    '|': Back.MAGENTA,  # Closed door
+
+    '.': Back.YELLOW,  # Dirt
+    'R': Back.WHITE,  # Robot
+}
+
+CHAR_TO_COLOUR_BG_STRING = dict([
+    (k, CHAR_TO_COLOUR_BG_OPEN[k] + "  " + Back.RESET)
+    for k in CHAR_TO_COLOUR_BG_OPEN.keys()])
 
 
 def char_to_pixel(char):
@@ -48,7 +93,22 @@ def char_to_emoji(char):
     return CHAR_TO_EMOJI[char]
 
 
+def char_to_colored_char(char):
+    return CHAR_TO_COLOUR_STRING[char]
+
+
+def char_to_colored_bg_char(char):
+    return CHAR_TO_COLOUR_BG_STRING[char]
+
+
 vchar_to_pixel = np.vectorize(char_to_pixel)
+
+
+def print_key():
+    print("KEY:")
+    for key in CHAR_TO_WORD.keys():
+        print()
+        print(f"    {char_to_colored_char(key)} = {char_to_colored_bg_char(key)} = {CHAR_TO_WORD[key]}")
 
 
 class Robot:
@@ -60,19 +120,31 @@ class Robot:
 # TODO - make random seed system
 
 
-def np_grid_to_string(grid: np.array, should_emojify=False):
+def np_grid_to_string(grid: np.array, should_emojify=False, should_color=True, should_bg=False):
     if grid is None:
         return "Not yet initialised"
-    if should_emojify:
+    elif should_bg:
+        f = char_to_colored_bg_char
+    elif should_color:
+        f = char_to_colored_char
+    elif should_emojify:
+        print("---\n")
         f = char_to_emoji
     else:
         f = (lambda x: x)
     row_lists = [list(map(f, row)) for row in grid]
     w = grid.shape[1]
-    row_strings = ["+ " + ("- " * w) + "+"] + \
-                  [" ".join(["|"] + row_list + ["|"]) for row_list in row_lists] + \
-                  ["+ " + ("- " * w) + "+"]
-    return emoji.emojize("\n".join(row_strings))
+    row_lists = [["+"] + (["-"] * w) + ["+"]] + \
+                [["|"] + row_list + ["|"] for row_list in row_lists] + \
+                [["+"] + (["-"] * w) + ["+"]]
+    if should_bg:
+        row_strings = ["".join(row_list) for row_list in row_lists]
+        row_strings[0] = " ".join(row_lists[0])
+        row_strings[-1] = " ".join(row_lists[-1])
+    else:
+        row_strings = [" ".join(row_list) for row_list in row_lists]
+    one_str = "\n".join(row_strings)
+    return emoji.emojize(one_str)
 
 
 class Grid(BaseEnv):
@@ -91,6 +163,7 @@ class Grid(BaseEnv):
         self.elapsed_steps = 0
 
         self.mu = Exception("This should have been changed")
+        self.gamma = Exception("This should have been changed")
         self.dist_measure = Exception("This should have been changed")
 
         self.init_door_state = init_door_state
@@ -114,6 +187,7 @@ class Grid(BaseEnv):
         self.grid = None
         self.s0_grid = None
         self.vases_smashed = None
+        self.doors_left_open = None
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
         self._last_spec_reward = None
         self._last_dist_reward = None
@@ -172,7 +246,7 @@ class Grid(BaseEnv):
     def render(self, mode="human"):
         grid = self._get_grid_with_rob()
         print("\n--- GridEnv ---")
-        print(np_grid_to_string(grid, should_emojify=False))
+        print(np_grid_to_string(grid))
         print(f"Last spec reward: {self._last_spec_reward}")
         print(f"Last dist reward: {self._last_dist_reward}")
         print("---  ======== ---")
@@ -187,6 +261,7 @@ class Grid(BaseEnv):
         self.s0_grid = self.grid.copy()
         self.rob_loc_history = [(self.rob.y, self.rob.x)]
         self.vases_smashed = 0
+        self.doors_left_open = 0
         self.elapsed_steps = 0
         if self._is_recording:
             self._record_step()
@@ -237,7 +312,8 @@ class Grid(BaseEnv):
         self._last_spec_reward = spec_reward
         self._last_dist_reward = dist_reward
         done = (self.elapsed_steps >= self.max_steps) or has_won
-        info = {}
+        info = {"dist_reward": dist_reward,
+                "spec_reward": spec_reward}
         if self._is_recording:
             self._record_step()
         return obs, spec_reward + dist_reward, done, info
@@ -255,12 +331,17 @@ class Grid(BaseEnv):
     def get_recordings(self) -> dict[list[np.array]]:
         return self._recordings
 
-    def init_dist_measure(self, dist_measure_name: str, mu: float):
+    def init_dist_measure(self, dist_measure_name: str, mu: float, gamma: float):
         self.dist_measure = self._get_distance_measure(dist_measure_name)
+        # Normalising mu: mu / (gamma ** self.max_steps)
         self.mu = mu
+        self.gamma = gamma
 
     def get_vases_smashed(self):
         return self.vases_smashed
+
+    def get_doors_left_open(self):
+        return int((self.grid == "/").sum())
 
     # ========== # ========== # - Private fixed methods - # ========== # ========== #
     def _record_step(self):
@@ -322,13 +403,17 @@ class Grid(BaseEnv):
     def _get_dist_term(self, s_t: np.ndarray, s_tp1: np.ndarray) -> float:
         d_t = self.dist_measure(self.s0_grid, s_t)
         d_tp1 = self.dist_measure(self.s0_grid, s_tp1)
-        return d_tp1 - d_t
+        # Can't include gamma term in practice!
+        # See: https://ai.stackexchange.com/questions/6314/what-should-i-do-when-the-potential-value-of-a-state-is-too-high
+        return (self.gamma * d_tp1) - d_t
 
     def _get_distance_measure(self, name: str):
         dct = {
             "null": self._null_distance,
             "simple": self._simple_distance,
+            "rgb": self._rgb_distance,
             "vase": self._vase_distance,
+            "vase_door": self._vase_door_distance,
         }
         if name not in dct.keys():
             erstr = f"Distance measure named {name} not defined in {list(dct.keys())}"
@@ -343,10 +428,30 @@ class Grid(BaseEnv):
         diff_sum = np.sum(diffs)
         return float(diff_sum)
 
+    # Design choice to exclude robot from image
+    def _rgb_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
+        im1 = np.stack(vchar_to_pixel(s1))
+        im2 = np.stack(vchar_to_pixel(s2))
+        diff = np.abs((im1 - im2)).sum()
+        return float(diff)
+
     def _vase_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
-        n1 = np.sum('V' != s1)
-        n2 = np.sum('V' != s2)
-        return float(np.abs(n1 - n2))
+        s1_vase_poses = ('V' == s1)
+        s2_vase_poses = ('V' == s2)
+        diffs = np.bitwise_xor(s1_vase_poses, s2_vase_poses)
+        return float(np.sum(diffs))
+
+    def _vase_door_distance(self, s1: np.ndarray, s2: np.ndarray,
+                            w_vase: float = 2.0,
+                            w_door: float = 0.2) -> float:
+        s1_vase_poses = ('V' == s1)
+        s2_vase_poses = ('V' == s2)
+        vase_diffs = np.bitwise_xor(s1_vase_poses, s2_vase_poses)
+        s1_cd_poses = ('|' == s1)
+        s2_cd_poses = ('|' == s2)
+        cd_diffs = np.bitwise_xor(s1_cd_poses, s2_cd_poses)
+        return float((w_vase * np.sum(vase_diffs)) +
+                     (w_door * np.sum(cd_diffs)))
 
 
 # TODO: Redo non-museum grids
@@ -591,3 +696,35 @@ class MuseumGrid(Grid):
 class SmallMuseumGrid(MuseumGrid):
     def __init__(self):
         super().__init__(room_size=3, num_rooms_wide=1)
+
+
+class EasyMuseumGrid(Grid):
+
+    def __init__(self):
+        super().__init__(height=5, width=9, player_init=(1, 1), goal_loc=-1)
+
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        pass
+
+    def _get_init_grid(self):
+        arr = np.array([
+
+            ['#', '#', '#', '#', '#', '#', '#', '#', '#'],
+            ['#', ' ', 'V', ' ', '|', ' ', 'V', '.', '#'],
+            ['#', ' ', '.', ' ', '#', ' ', 'V', '.', '#'],
+            ['#', '.', 'V', '.', '#', ' ', ' ', ' ', '#'],
+            ['#', '#', '#', '#', '#', '#', '#', '#', '#']
+
+        ], dtype=np.unicode_)
+        return arr
+
+
+if __name__ == "__main__":
+    g_grid = np.array([
+        ['#', '#', '#', '#', '#', '#', '#'],
+        ['#', ' ', ' ', ' ', ' ', ' ', '#'],
+        ['#', 'R', ' ', 'V', ' ', '.', '#'],
+        ['#', ' ', ' ', ' ', ' ', ' ', '#'],
+        ['#', '#', '#', '#', '#', '#', '#']
+    ])
+    print(np_grid_to_string(g_grid))

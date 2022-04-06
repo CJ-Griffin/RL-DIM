@@ -73,7 +73,8 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
 
     if params.agent_name == "HumanAgent":
         env.start_recording()
-        run_episode(agent, env, should_render=True)
+        info = run_episode(agent, env, should_render=True)
+        print(info)
         env.stop_and_log_recording(0)
         env.start_recording()
         run_episode(agent, env, should_render=True)
@@ -117,15 +118,15 @@ def run_episodic(agent: Agent,
             env.start_recording()
 
         info = run_episode(agent, env)
-        episode_scores.append(info["score"])
+        episode_scores.append(info["ep_score"])
 
         if nept_log is not None:
-            nept_log["ep_scores"].log(info["score"])
-            action_freqs = info["action_freqs"]
-            action_freqs = action_freqs / action_freqs.sum()
-            for i in range(0, 5):
-                nept_log[f"action_freqs/{i}"].log(action_freqs[i])
-            nept_log["vases_smashed"] = info["vases_smashed"]
+            for key, val in info.items():
+                if isinstance(val, np.ndarray):
+                    for i in range(len(val)):
+                        nept_log[f"{key}_{i}"].log(info[key][i])
+                else:
+                    nept_log[key].log(info[key])
 
         if str(ep_num)[1:] in "0" * 20:
             env.stop_and_log_recording((-ep_num if is_eval else ep_num))
@@ -152,7 +153,8 @@ def run_episode(agent: Agent,
     num_steps = 0
     done = False
     rewards = []
-
+    spec_rewards = []
+    dist_rewards = []
     action_freqs = np.zeros(5)
 
     while not done and num_steps <= max_steps:
@@ -165,16 +167,27 @@ def run_episode(agent: Agent,
         agent.step(state, action, reward, next_state, done)
         state = next_state
         rewards.append(reward)
+        if isinstance(env, Grid):
+            spec_rewards.append(info["spec_reward"])
+            dist_rewards.append(info["dist_reward"])
     if isinstance(env, Grid):
         vases_smashed = env.get_vases_smashed()
+        doors_left_open = env.get_doors_left_open()
     else:
         vases_smashed = 0
+        doors_left_open = 0
     env.close()
-    score = np.sum(rewards)  # TODO consider different episode scores
+    score = sum(rewards)  # TODO consider different episode scores
+    if isinstance(env, Grid):
+        spec_score = sum(spec_rewards)
+        dist_score = sum(dist_rewards)
     return {"num_steps": num_steps,
-            "score": score,
-            "action_freqs": action_freqs,
-            "vases_smashed": vases_smashed}
+            "ep_score": score,
+            "spec_score": spec_score,
+            "dist_score": dist_score,
+            "action_freqs": action_freqs / (len(action_freqs) + 1),
+            "vases_smashed": vases_smashed,
+            "doors_left_open": doors_left_open}
 
 
 if __name__ == '__main__':

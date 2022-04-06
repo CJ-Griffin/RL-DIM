@@ -16,7 +16,8 @@ def get_env(experiment_params: TrainParams) -> BaseEnv:
     env = env_class()
     if issubclass(env_class, Grid):
         env.init_dist_measure(mu=experiment_params.mu,
-                              dist_measure_name=experiment_params.dist_measure_name)
+                              dist_measure_name=experiment_params.dist_measure_name,
+                              gamma=experiment_params.gamma)
     return env
 
 
@@ -37,13 +38,14 @@ def get_agent(env: BaseEnv, experiment_params: TrainParams) -> Agent:
 
 
 def save_agent_to_neptune(agent: Agent, nept_log: neptune.Run, episode_num: int):
-    an = agent.get_unique_name()
-    path = f"models/temp/{an}.pt"
-    agent.save(path)
-    nept_log[f"model_saves/q_net-{episode_num}"].upload(path)
+    pass
+    # an = agent.get_unique_name()
+    # path = f"models/temp/{an}.pt"
+    # agent.save(path)
+    # nept_log[f"model_saves/q_net-{episode_num}"].upload(path)
 
 
-def load_agent_from_neptune(run_name: str, ep_no: int) -> (torch.nn.Module, neptune.Run):
+def load_agent_from_neptune(run_name: str, ep_no: int) -> torch.nn.Module:
     destination_path = f"models/temp/download_{run_name}_{ep_no}.pt"
 
     nept_log = neptune.init(project="cj.griffin/RL4YP",

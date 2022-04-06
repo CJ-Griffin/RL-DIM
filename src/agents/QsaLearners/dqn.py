@@ -109,6 +109,8 @@ class DQN(QsaLearner):
     def _Q_to_string(self):
         return str(self._Q_net)
 
+    def get_model(self):
+        return self._Q_net
 
 class DQN_CNN(DQN):
     NETWORK_CLASS = CNN

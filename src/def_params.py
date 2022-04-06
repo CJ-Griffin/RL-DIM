@@ -145,6 +145,28 @@ SKEIN_DICT = {
         ) for env_name in ALL_GRIDS[2:]
     ],
 
+    "human_test_museum_grid": [
+        TrainParams(
+            env_name="MuseumGrid",
+            agent_name="HumanAgent",
+            num_episodes=100,
+            gamma=0.9,
+            should_debug=False,
+            is_test=True
+        )
+    ],
+
+    "human_test_easy_museum_grid": [
+        TrainParams(
+            env_name="EasyMuseumGrid",
+            agent_name="HumanAgent",
+            num_episodes=100,
+            gamma=0.9,
+            should_debug=False,
+            is_test=True
+        )
+    ],
+
     "test_all_agents": list(reversed([
         TrainParams(
             env_name="SmallEmptyGrid",

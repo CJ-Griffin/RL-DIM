@@ -35,5 +35,5 @@ conda update -n base conda
 conda update anaconda
 conda install pytorch torchvision torchaudio -c pytorch
 conda install -c conda-forge neptune-client emoji tqdm matplotlib array2gif
-pip install xxhash enquiries
+pip install xxhash enquiries torchviz
 ```

@@ -1,3 +1,4 @@
+import copy
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -64,13 +65,19 @@ class Agent(ABC):
             raise Exception(f"Model ({self}) is not compatible with infinite state space ({state_space})")
 
     def save(self, path: str):
-        torch.save(self, path)
+        print(dir(self))
+        if hasattr(self, "_remove_memory"):
+            a_copy = copy.copy(self)
+            a_copy._remove_memory()
+            torch.save(a_copy, path)
+        else:
+            torch.save(self, path)
 
     def get_unique_name(self) -> str:
         an = self._params.agent_name
         env = self._params.env_name
         return f"{an}_{env}_{self._unique_ID}"
 
-    def update_state_action_spaces(self,  state_space: gym.Space, action_space: gym.Space):
+    def update_state_action_spaces(self, state_space: gym.Space, action_space: gym.Space):
         self._action_space = action_space
         self._state_space = state_space
