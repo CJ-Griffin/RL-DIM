@@ -131,3 +131,4 @@ dmypy.json
 /.neptune/
 /mnist_experiments/data/
 /src/more_skein_definitions/
+/nept_archive/

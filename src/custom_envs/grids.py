@@ -405,7 +405,8 @@ class Grid(BaseEnv):
         d_tp1 = self.dist_measure(self.s0_grid, s_tp1)
         # Can't include gamma term in practice!
         # See: https://ai.stackexchange.com/questions/6314/what-should-i-do-when-the-potential-value-of-a-state-is-too-high
-        return (self.gamma * d_tp1) - d_t
+        return (d_tp1) - d_t
+        # return (self.gamma * d_tp1) - d_t
 
     def _get_distance_measure(self, name: str):
         dct = {

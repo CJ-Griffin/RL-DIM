@@ -117,7 +117,7 @@ def run_episodic(agent: Agent,
         if str(ep_num)[1:] in "0" * 20:
             env.start_recording()
 
-        info = run_episode(agent, env)
+        info = run_episode(agent, env, is_eval=is_eval)
         episode_scores.append(info["ep_score"])
 
         if nept_log is not None:
@@ -148,7 +148,8 @@ def run_episodic(agent: Agent,
 def run_episode(agent: Agent,
                 env: gym.Env,
                 max_steps: int = int(1e4),
-                should_render: bool = False) -> dict:
+                should_render: bool = False,
+                is_eval=False) -> dict:
     state = env.reset()
     num_steps = 0
     done = False
@@ -156,6 +157,8 @@ def run_episode(agent: Agent,
     spec_rewards = []
     dist_rewards = []
     action_freqs = np.zeros(5)
+
+    agent.is_eval_mode = is_eval
 
     while not done and num_steps <= max_steps:
         num_steps += 1
@@ -170,6 +173,9 @@ def run_episode(agent: Agent,
         if isinstance(env, Grid):
             spec_rewards.append(info["spec_reward"])
             dist_rewards.append(info["dist_reward"])
+
+    agent.is_eval_mode = False
+
     if isinstance(env, Grid):
         vases_smashed = env.get_vases_smashed()
         doors_left_open = env.get_doors_left_open()

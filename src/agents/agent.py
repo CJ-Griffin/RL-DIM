@@ -23,6 +23,7 @@ class Agent(ABC):
         self._state_space = state_space
         self._should_debug = params.should_debug
         self._unique_ID = "".join(list(np.random.choice(CHARS, size=20)))
+        self.is_eval_mode = False
 
     @abstractmethod
     def act(self, state):

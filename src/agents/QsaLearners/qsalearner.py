@@ -29,7 +29,7 @@ class QsaLearner(Agent):
         assert state in self._state_space, (state, self._state_space)
 
         self._init_Q_s(state)
-        if 1 == np.random.binomial(1, self._epsilon):
+        if not self.is_eval_mode and 1 == np.random.binomial(1, self._epsilon):
             return self._action_space.sample()
         else:
             return self.get_greedy_action(state)
