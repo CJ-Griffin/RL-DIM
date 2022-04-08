@@ -2,11 +2,11 @@ from src.run_parameters import TrainParams
 
 SKEIN_DICT = {
 
-    "EasyMuseumGridTest": [
+    "SmallMuseumGridTest": [
         TrainParams(
-            env_name="EasyMuseumGrid",
+            env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(1e4),
+            num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="null",
@@ -15,11 +15,11 @@ SKEIN_DICT = {
         )
     ],
 
-    "HumanEasyMuseumGridTest": [
+    "HumanSmallMuseumGridTest": [
         TrainParams(
-            env_name="EasyMuseumGrid",
+            env_name="SmallMuseumGrid",
             agent_name="HumanAgent",
-            num_episodes=int(1e3),
+            num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="rgb",
@@ -29,9 +29,9 @@ SKEIN_DICT = {
 
     "Mu_Finding": [
         TrainParams(
-            env_name="EasyMuseumGrid",
+            env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(5e5),
+            num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="vase_door",
@@ -42,9 +42,9 @@ SKEIN_DICT = {
 
     "Mu_Finding_RGB": [
         TrainParams(
-            env_name="EasyMuseumGrid",
+            env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(5e5),
+            num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="rgb",
@@ -55,9 +55,9 @@ SKEIN_DICT = {
 
     "Mu_Finding_Simple": [
         TrainParams(
-            env_name="EasyMuseumGrid",
+            env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(5e5),
+            num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="simple",

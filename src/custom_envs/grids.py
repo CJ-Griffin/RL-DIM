@@ -694,9 +694,26 @@ class MuseumGrid(Grid):
         return not (self.grid == ".").any()
 
 
-class SmallMuseumGrid(MuseumGrid):
+class SmallMuseumGrid(Grid):
     def __init__(self):
-        super().__init__(room_size=3, num_rooms_wide=1)
+        super().__init__(height=6, width=6, player_init=(1, 1),
+                         goal_loc=-1, max_steps=30)
+
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        pass
+
+    def _get_init_grid(self):
+        arr = np.array([
+
+            ['#', '#', '#', '#', '#', '#'],
+            ['#', ' ', 'V', '.', ' ', '#'],
+            ['#', '.', 'V', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', 'V', '#'],
+            ['#', '.', 'V', ' ', '.', '#'],
+            ['#', '#', '#', '#', '#', '#']
+
+        ], dtype=np.unicode_)
+        return arr
 
 
 class EasyMuseumGrid(Grid):
