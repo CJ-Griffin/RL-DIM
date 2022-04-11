@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from neptune import new as neptune
 from neptune.new.exceptions import CannotResolveHostname
 import gym
-
+from src.logger import Logger
 from src.run_parameters import TrainParams
 
 
@@ -82,10 +82,6 @@ def generate_random_string(n: int) -> str:
     return "".join(list(chosen))
 
 
-def get_datetime_string() -> str:
-    dt = datetime.now().strftime("%Ym%d_%H%M%S")
-
-
 def are_sets_independent(sets: set[set]) -> bool:
     for s1 in sets:
         for s2 in sets - {s1}:
@@ -97,6 +93,13 @@ def are_sets_independent(sets: set[set]) -> bool:
 def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
     if params.should_skip_neptune:
         return None
+    elif True:
+        logger = Logger()
+        logger["parameters"] = params.get_dict()
+        logger["parameters"] = params.get_dict()
+        logger["skein_id"] = skein_id
+        logger["experiment_name"] = experiment_name
+        return logger
     else:
         try:
             # token = os.getenv('NEPTUNE_API_TOKEN')

@@ -212,7 +212,7 @@ if __name__ == '__main__':
         g_choice = enquiries.choose('Choose an experiment to run: ', SKEIN_DICT.keys())
         print(f"CHOSEN: {g_choice}")
     g_skein = SKEIN_DICT[g_choice]
-    g_time_id = datetime.datetime.now().strftime('%Ym%d_%H%M%S')
+    g_time_id = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     g_skein_id = f"{g_choice}_{g_time_id}"
     if g_args.trial_run:
         for g_exp in g_skein:
