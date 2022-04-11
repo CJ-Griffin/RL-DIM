@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from neptune import new as neptune
 from neptune.new.exceptions import CannotResolveHostname
 import gym
-
+from src.logger import Logger
 from src.run_parameters import TrainParams
 
 
@@ -82,10 +82,6 @@ def generate_random_string(n: int) -> str:
     return "".join(list(chosen))
 
 
-def get_datetime_string() -> str:
-    dt = datetime.now().strftime("%Ym%d_%H%M%S")
-
-
 def are_sets_independent(sets: set[set]) -> bool:
     for s1 in sets:
         for s2 in sets - {s1}:
@@ -97,6 +93,13 @@ def are_sets_independent(sets: set[set]) -> bool:
 def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
     if params.should_skip_neptune:
         return None
+    elif False:
+        logger = Logger()
+        logger["parameters"] = params.get_dict()
+        logger["parameters"] = params.get_dict()
+        logger["skein_id"] = skein_id
+        logger["experiment_name"] = experiment_name
+        return logger
     else:
         try:
             # token = os.getenv('NEPTUNE_API_TOKEN')
@@ -106,7 +109,8 @@ def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
                     "VwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ=="
 
             nept_log = neptune.init(project="cj.griffin/RL4YP",
-                                    api_token=token, )
+                                    api_token=token,
+                                    mode="async")
             nept_log["parameters"] = params.get_dict()
             nept_log["skein_id"] = skein_id
             nept_log["experiment_name"] = experiment_name
@@ -188,3 +192,7 @@ def is_space_finite(space: gym.Space) -> bool:
     raise NotImplementedError("I don't know how to handle this yet", space)
 
 
+def reduce_res_freq(xs: list, resolution: int = 1000) -> list:
+        xs = np.array(xs)
+        xs = list(np.mean(xs.reshape(-1, resolution), axis=1))
+        return xs

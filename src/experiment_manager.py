@@ -6,14 +6,13 @@ from tqdm import tqdm
 import numpy as np
 import gym
 import neptune.new as neptune
-import sys, os
 
 # My imports
 from src.agents import Agent
 from src.custom_envs import Grid
 from src.def_params import SKEIN_DICT
 from src.run_parameters import TrainParams
-from src.generic_utils import init_neptune_log, save_recordings, plot_train_scores
+from src.generic_utils import init_neptune_log, reduce_res_freq
 from src.rl_utils import get_env, get_agent, save_agent_to_neptune
 
 
@@ -44,20 +43,21 @@ def run_skein(params_list: list[TrainParams], skein_id: str,
 
 
 def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
-    nept_log = init_neptune_log(params, skein_id, experiment_name)
-
+    # nept_log = init_neptune_log(params, skein_id, experiment_name)
+    nept_log = None
     print(params)
     env = get_env(params)
     agent = get_agent(env, params)
     env.render()
     agent.render()
     if agent.REQUIRES_TRAINING:
-        episode_scores = run_episodic(agent=agent,
-                                      env=env,
-                                      nept_log=nept_log,
-                                      num_episodes=params.num_episodes)
+        episode_scores, total_info = run_episodic(agent=agent,
+                                                  env=env,
+                                                  nept_log=nept_log,
+                                                  num_episodes=params.num_episodes)
     else:
         episode_scores = []
+        total_info = {}
         print(f"skipping training for {params.agent_name}")
 
     if not params.agent_name == "HumanAgent":
@@ -80,27 +80,51 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         run_episode(agent, env, should_render=True)
         env.stop_and_log_recording(0)
 
-    if nept_log is not None:
-        recordings = env.get_recordings()
-        if len(recordings) > 0:
-            save_recordings(nept_log, recordings)
-        nept_log.stop()
-    else:
-        # plot_train_scores(episode_scores)
-        pass
+    # recordings = env.get_recordings()
+
+    nept_log = init_neptune_log(params, skein_id, experiment_name)
+    for (key, val) in total_info.items():
+        if isinstance(val, list):
+            if len(val) > 1000:
+                val = reduce_res_freq(val)
+            print(len(val))
+            for elem in val:
+                nept_log[key].log(elem)
+        else:
+            nept_log[key] = val
+
+    # if len(recordings) > 0:
+    #     save_recordings(nept_log, recordings)
+    nept_log.stop()
 
 
 def run_eval(agent: Agent,
              env: gym.Env,
              # nept_log: neptune.Run,
              num_episodes: int) -> float:
-    scores = run_episodic(agent=agent,
-                          env=env,
-                          num_episodes=num_episodes,
-                          nept_log=None,
-                          is_eval=True)
+    scores, total_info = run_episodic(agent=agent,
+                                      env=env,
+                                      num_episodes=num_episodes,
+                                      nept_log=None,
+                                      is_eval=True)
 
     return float(np.mean(scores))
+
+
+def update_total_info(total_info, info):
+    for key, val in info.items():
+        # if isinstance(val, np.ndarray):
+        #     for i in range(len(val)):
+        #         new_key = f"{key}_{i}"
+        #         if new_key not in total_info:
+        #             total_info[new_key] = [info[key][i]]
+        #         else:
+        #             total_info[new_key].append([info[key][i]])
+        # else:
+        if key not in total_info:
+            total_info[key] = [val]
+        else:
+            total_info[key].append(val)
 
 
 def run_episodic(agent: Agent,
@@ -113,6 +137,8 @@ def run_episodic(agent: Agent,
 
     ep_iter = tqdm(range(num_episodes))
 
+    total_info = {}
+
     for ep_num in ep_iter:
         if str(ep_num)[1:] in "0" * 20:
             env.start_recording()
@@ -120,29 +146,35 @@ def run_episodic(agent: Agent,
         info = run_episode(agent, env, is_eval=is_eval)
         episode_scores.append(info["ep_score"])
 
-        if nept_log is not None:
-            for key, val in info.items():
-                if isinstance(val, np.ndarray):
-                    for i in range(len(val)):
-                        nept_log[f"{key}_{i}"].log(info[key][i])
-                else:
-                    nept_log[key].log(info[key])
+        # if False and nept_log is not None:
+        #     for key, val in info.items():
+        #         if isinstance(val, np.ndarray):
+        #             for i in range(len(val)):
+        #                 nept_log[f"{key}_{i}"].log(info[key][i])
+        #         else:
+        #             nept_log[key].log(info[key])
+        # else:
+        update_total_info(total_info, info)
 
         if str(ep_num)[1:] in "0" * 20:
             env.stop_and_log_recording((-ep_num if is_eval else ep_num))
 
         if ep_num % 1000 == 0:
             ep_iter.set_description(f"AS = {np.mean(episode_scores[-1000:])}")
-            if nept_log is not None:
-                nept_log["last_episode_num"] = ep_num
+            # if False and nept_log is not None:
+            #     nept_log["last_episode_num"] = ep_num
+            # else:
+            total_info["last_episode_num"] = ep_num
 
-        if nept_log is not None and ep_num % save_freq == 0:
-            save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
+        # if False and nept_log is not None and ep_num % save_freq == 0:
+        #     save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
+        # else:
+        #     pass
 
-    if nept_log is not None:
-        save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
-        nept_log["last_episode_num"] = ep_num
-    return episode_scores
+    # if nept_log is not None:
+    #     save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
+    #     nept_log["last_episode_num"] = ep_num
+    return episode_scores, total_info
 
 
 def run_episode(agent: Agent,
@@ -187,13 +219,14 @@ def run_episode(agent: Agent,
     if isinstance(env, Grid):
         spec_score = sum(spec_rewards)
         dist_score = sum(dist_rewards)
-    return {"num_steps": num_steps,
-            "ep_score": score,
-            "spec_score": spec_score,
-            "dist_score": dist_score,
-            "action_freqs": action_freqs / (len(action_freqs) + 1),
-            "vases_smashed": vases_smashed,
-            "doors_left_open": doors_left_open}
+    return {
+        # "num_steps": num_steps,
+        "ep_score": score,
+        "spec_score": spec_score,
+        "dist_score": dist_score,
+        # "action_freqs": action_freqs / (len(action_freqs) + 1),
+        "vases_smashed": vases_smashed,
+        "doors_left_open": doors_left_open}
 
 
 if __name__ == '__main__':
@@ -212,7 +245,7 @@ if __name__ == '__main__':
         g_choice = enquiries.choose('Choose an experiment to run: ', SKEIN_DICT.keys())
         print(f"CHOSEN: {g_choice}")
     g_skein = SKEIN_DICT[g_choice]
-    g_time_id = datetime.datetime.now().strftime('%Ym%d_%H%M%S')
+    g_time_id = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     g_skein_id = f"{g_choice}_{g_time_id}"
     if g_args.trial_run:
         for g_exp in g_skein:

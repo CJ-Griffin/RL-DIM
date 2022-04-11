@@ -9,9 +9,8 @@ SKEIN_DICT = {
             num_episodes=int(1e5),
             gamma=0.9,
             epsilon=0.05,
-            dist_measure_name="null",
+            dist_measure_name="simple",
             is_test=True,
-
         )
     ],
 
@@ -27,11 +26,22 @@ SKEIN_DICT = {
         )
     ],
 
+    "Comparing_Algorithms": [
+        TrainParams(
+            env_name="SmallMuseumGrid",
+            agent_name=an,
+            num_episodes=int(1e6),
+            gamma=0.9,
+            epsilon=0.05,
+            dist_measure_name="simple"
+        ) for an in ["QLearner", "SARSA", "TabularMC"]
+    ],
+
     "Mu_Finding": [
         TrainParams(
             env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(1e5),
+            num_episodes=int(1e6),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="vase_door",
