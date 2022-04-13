@@ -1,5 +1,5 @@
 import gym
-from src.agents.QsaLearners.qsalearner import QsaLearner
+from src.agents.QsaLearners.qsalearner import QsaLearner, LinearMemory
 from src.run_parameters import TrainParams
 import xxhash
 import collections
@@ -26,6 +26,12 @@ class LookupLearner(QsaLearner):
         if state not in self._Q:
             self._Q[state] = {action: self._q_init for action in self._allowed_actions}
             self._Q_count[state] = {action: 0 for action in self._allowed_actions}
+
+    def restore_after_load(self):
+        import xxhash
+        self._state_hasher = xxhash.xxh64()
+        self._memory = LinearMemory(buffer_size=self._buffer_size,
+                                    batch_size=self._batch_size)
 
     def get_greedy_action(self, state):
         init_state = state

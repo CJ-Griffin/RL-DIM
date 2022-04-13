@@ -66,13 +66,12 @@ class Agent(ABC):
             raise Exception(f"Model ({self}) is not compatible with infinite state space ({state_space})")
 
     def save(self, path: str):
-        print(dir(self))
-        if hasattr(self, "_remove_memory"):
-            a_copy = copy.copy(self)
-            a_copy._remove_memory()
-            torch.save(a_copy, path)
-        else:
-            torch.save(self, path)
+        a_copy = copy.copy(self)
+        if hasattr(a_copy, "_memory"):
+            del a_copy._memory
+        if hasattr(a_copy, "_state_hasher"):
+            del a_copy._state_hasher
+        torch.save(a_copy, path)
 
     def get_unique_name(self) -> str:
         an = self._params.agent_name

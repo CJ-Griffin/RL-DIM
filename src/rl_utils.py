@@ -38,11 +38,10 @@ def get_agent(env: BaseEnv, experiment_params: TrainParams) -> Agent:
 
 
 def save_agent_to_neptune(agent: Agent, nept_log: neptune.Run, episode_num: int):
-    pass
-    # an = agent.get_unique_name()
-    # path = f"models/temp/{an}.pt"
-    # agent.save(path)
-    # nept_log[f"model_saves/q_net-{episode_num}"].upload(path)
+    an = agent.get_unique_name()
+    path = f"models/temp/{an}.pt"
+    agent.save(path)
+    nept_log[f"model_saves/q_net-{episode_num}"].upload(path)
 
 
 def load_agent_from_neptune(run_name: str, ep_no: int) -> torch.nn.Module:
@@ -58,4 +57,8 @@ def load_agent_from_neptune(run_name: str, ep_no: int) -> torch.nn.Module:
         agent = torch.load(destination_path)
     else:
         agent = torch.load(destination_path, map_location=torch.device('cpu'))
+
+    if hasattr(agent, "restore_after_load"):
+        agent.restore_after_load()
+
     return agent

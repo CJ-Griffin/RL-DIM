@@ -6,7 +6,7 @@ SKEIN_DICT = {
         TrainParams(
             env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(1e5),
+            num_episodes=int(1e3),
             gamma=0.9,
             epsilon=0.05,
             dist_measure_name="simple",

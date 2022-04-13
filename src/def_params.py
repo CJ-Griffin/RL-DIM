@@ -40,15 +40,6 @@ SOME_ENV_NAMES = [
 
 SKEIN_DICT = {
 
-    "CNNsOnMuseum": [
-        TrainParams(
-            env_name="MuseumGrid",
-            agent_name=an,
-            num_episodes=int(1e5),
-            gamma=0.9,
-        ) for an in ["DQN_CNN", "DQN_CNN2", "DQN_CNN3"]
-    ],
-
     "temp": [
         TrainParams(
             env_name="DoorGrid",

@@ -61,10 +61,12 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         print(f"skipping training for {params.agent_name}")
 
     if not params.agent_name == "HumanAgent":
-        eval_score = run_eval(agent, env, 200)
+        eval_score, eval_info = run_eval(agent, env, 100)
         if nept_log is not None:
             nept_log["eval_score"] = eval_score
         print(params.agent_name, eval_score)
+    else:
+        eval_score = 0
 
     if params.should_render and not params.agent_name == "HumanAgent":
         for ep_no in range(5):
@@ -93,6 +95,16 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         else:
             nept_log[key] = val
 
+    for (key, val) in eval_info.items():
+        if isinstance(val, list):
+            if len(val) > 1000:
+                val = reduce_res_freq(val)
+            for elem in val:
+                nept_log[f"eval/{key}"].log(elem)
+        else:
+            nept_log[f"eval/{key}"] = val
+
+    save_agent_to_neptune(agent, nept_log, -1)
     # if len(recordings) > 0:
     #     save_recordings(nept_log, recordings)
     nept_log.stop()
@@ -108,7 +120,7 @@ def run_eval(agent: Agent,
                                       nept_log=None,
                                       is_eval=True)
 
-    return float(np.mean(scores))
+    return float(np.mean(scores)), total_info
 
 
 def update_total_info(total_info, info):
@@ -134,6 +146,7 @@ def run_episodic(agent: Agent,
                  is_eval: bool = False,
                  save_freq: int = 1e5):
     episode_scores = []
+
 
     ep_iter = tqdm(range(num_episodes))
 
