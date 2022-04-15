@@ -768,7 +768,7 @@ class EasyMuseumGrid(Grid):
 # Each step there is a time penalty
 class MuseumRush(Grid):
     def __init__(self):
-        super().__init__(height=5, width=7, player_init=(1, 2), goal_loc=None,
+        super().__init__(height=5, width=5, player_init=(1, 2), goal_loc=None,
                          dirt_value=0.0, time_step_penalty=0.1)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
