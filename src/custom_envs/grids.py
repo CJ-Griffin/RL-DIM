@@ -173,7 +173,7 @@ class Grid(BaseEnv):
             low=0,
             high=1,
             shape=[3, height, width],
-            dtype=np.int
+            dtype=int
         )
         self.player_init = player_init
         self.height = height
@@ -376,7 +376,10 @@ class Grid(BaseEnv):
 
     def _get_obs(self) -> np.array:
         grid = self._get_grid_with_rob()
-        grid2 = vchar_to_pixel(grid)
+        try:
+            grid2 = vchar_to_pixel(grid)
+        except RecursionError as re:
+            raise re(grid)
         grid3 = np.stack(grid2)
         return grid3
 

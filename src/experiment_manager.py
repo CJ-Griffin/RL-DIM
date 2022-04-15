@@ -12,7 +12,7 @@ from src.agents import Agent
 from src.custom_envs import Grid
 from src.def_params import SKEIN_DICT
 from src.run_parameters import TrainParams
-from src.generic_utils import init_neptune_log, reduce_res_freq
+from src.generic_utils import init_neptune_log, reduce_res_freq, save_recordings
 from src.rl_utils import get_env, get_agent, save_agent_to_neptune
 
 
@@ -43,8 +43,6 @@ def run_skein(params_list: list[TrainParams], skein_id: str,
 
 
 def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
-    # nept_log = init_neptune_log(params, skein_id, experiment_name)
-    nept_log = None
     print(params)
     env = get_env(params)
     agent = get_agent(env, params)
@@ -53,20 +51,18 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
     if agent.REQUIRES_TRAINING:
         episode_scores, total_info = run_episodic(agent=agent,
                                                   env=env,
-                                                  nept_log=nept_log,
                                                   num_episodes=params.num_episodes)
     else:
         episode_scores = []
         total_info = {}
         print(f"skipping training for {params.agent_name}")
 
-    if not params.agent_name == "HumanAgent":
-        eval_score, eval_info = run_eval(agent, env, 100)
-        if nept_log is not None:
-            nept_log["eval_score"] = eval_score
-        print(params.agent_name, eval_score)
-    else:
-        eval_score = 0
+    # if not params.agent_name == "HumanAgent":
+    #     eval_score, eval_info = run_episodic(agent, env, 100, is_eval=True)
+    #     print(params.agent_name, eval_score)
+    # else:
+    #     eval_score = 0
+    #     eval_info = 0
 
     if params.should_render and not params.agent_name == "HumanAgent":
         for ep_no in range(5):
@@ -82,48 +78,25 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         run_episode(agent, env, should_render=True)
         env.stop_and_log_recording(0)
 
-    # recordings = env.get_recordings()
+    recordings = env.get_recordings()
 
     nept_log = init_neptune_log(params, skein_id, experiment_name)
     for (key, val) in total_info.items():
         if isinstance(val, list):
             if len(val) > 1000:
                 val = reduce_res_freq(val)
-            print(len(val))
             for elem in val:
                 nept_log[key].log(elem)
         else:
             nept_log[key] = val
 
-    for (key, val) in eval_info.items():
-        if isinstance(val, list):
-            if len(val) > 1000:
-                val = reduce_res_freq(val)
-            for elem in val:
-                nept_log[f"eval/{key}"].log(elem)
-        else:
-            nept_log[f"eval/{key}"] = val
-
     save_agent_to_neptune(agent, nept_log, -1)
-    # if len(recordings) > 0:
-    #     save_recordings(nept_log, recordings)
+    if len(recordings) > 0:
+        save_recordings(nept_log, recordings)
     nept_log.stop()
 
 
-def run_eval(agent: Agent,
-             env: gym.Env,
-             # nept_log: neptune.Run,
-             num_episodes: int) -> float:
-    scores, total_info = run_episodic(agent=agent,
-                                      env=env,
-                                      num_episodes=num_episodes,
-                                      nept_log=None,
-                                      is_eval=True)
-
-    return float(np.mean(scores)), total_info
-
-
-def update_total_info(total_info, info):
+def update_total_info(total_info, info, eval_info):
     for key, val in info.items():
         # if isinstance(val, np.ndarray):
         #     for i in range(len(val)):
@@ -138,55 +111,54 @@ def update_total_info(total_info, info):
         else:
             total_info[key].append(val)
 
+    for (key, val) in eval_info.items():
+        ekey = f"eval/{key}"
+        if ekey not in total_info:
+            total_info[ekey] = [val]
+        else:
+            total_info[ekey].append(val)
+
 
 def run_episodic(agent: Agent,
                  env: gym.Env,
                  num_episodes: int,
-                 nept_log: neptune.Run,
                  is_eval: bool = False,
-                 save_freq: int = 1e5):
+                 save_freq: int = 1e5,
+                 eval_freq: int = None):
+    if eval_freq is None:
+        eval_freq = min(int(1e3), num_episodes // 10)
     episode_scores = []
-
 
     ep_iter = tqdm(range(num_episodes))
 
     total_info = {}
 
     for ep_num in ep_iter:
-        if str(ep_num)[1:] in "0" * 20:
+        should_record_this_ep = str(ep_num + 1)[1:] in "0" * 20 and str(ep_num + 1)[0] in ["5", "1"]
+        if should_record_this_ep:
             env.start_recording()
 
         info = run_episode(agent, env, is_eval=is_eval)
         episode_scores.append(info["ep_score"])
 
-        # if False and nept_log is not None:
-        #     for key, val in info.items():
-        #         if isinstance(val, np.ndarray):
-        #             for i in range(len(val)):
-        #                 nept_log[f"{key}_{i}"].log(info[key][i])
-        #         else:
-        #             nept_log[key].log(info[key])
-        # else:
-        update_total_info(total_info, info)
-
-        if str(ep_num)[1:] in "0" * 20:
+        if should_record_this_ep:
             env.stop_and_log_recording((-ep_num if is_eval else ep_num))
 
-        if ep_num % 1000 == 0:
-            ep_iter.set_description(f"AS = {np.mean(episode_scores[-1000:])}")
-            # if False and nept_log is not None:
-            #     nept_log["last_episode_num"] = ep_num
-            # else:
-            total_info["last_episode_num"] = ep_num
-
+        if (ep_num + 1) % eval_freq == 0:
+            env.start_recording()
+            eval_info = run_episode(agent=agent,
+                                    env=env,
+                                    is_eval=True)
+            env.stop_and_log_recording(-ep_num)
+            ep_iter.set_description(f"AS = {eval_info['ep_score']}")
+        else:
+            eval_info = {}
+        update_total_info(total_info, info, eval_info)
         # if False and nept_log is not None and ep_num % save_freq == 0:
         #     save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
         # else:
         #     pass
 
-    # if nept_log is not None:
-    #     save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
-    #     nept_log["last_episode_num"] = ep_num
     return episode_scores, total_info
 
 
@@ -262,7 +234,7 @@ if __name__ == '__main__':
     g_skein_id = f"{g_choice}_{g_time_id}"
     if g_args.trial_run:
         for g_exp in g_skein:
-            g_exp.num_episodes = 100
+            g_exp.num_episodes = 1000
             g_exp.is_test = True
     if not g_skein[0].should_profile:
         run_skein(g_skein, g_skein_id, g_choice, g_args.parallel)

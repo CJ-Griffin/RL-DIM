@@ -114,6 +114,7 @@ def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
             nept_log["parameters"] = params.get_dict()
             nept_log["skein_id"] = skein_id
             nept_log["experiment_name"] = experiment_name
+            nept_log["true_start"] = datetime.now()
             return nept_log
         except CannotResolveHostname as connect_error:
             if params.is_test:
