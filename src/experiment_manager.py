@@ -77,6 +77,11 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
         env.start_recording()
         run_episode(agent, env, should_render=True)
         env.stop_and_log_recording(0)
+        print(info)
+        env.start_recording()
+        run_episode(agent, env, should_render=True)
+        env.stop_and_log_recording(0)
+        print(info)
 
     recordings = env.get_recordings()
 

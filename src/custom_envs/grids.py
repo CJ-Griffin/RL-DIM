@@ -39,14 +39,25 @@ CHAR_TO_WORD = {
 }
 
 CHAR_TO_EMOJI = {
-    ' ': " ",  # Empty space
+    ' ': ":white_large_square:",  # Empty space
     'R': ":robot:",  # Robot
     'G': ":star:",  # Goal
-    '#': ":white_large_square:",  # Wall
+    '#': ":black_large_square:",  # Wall
     '.': ":brown_circle:",  # Dirt
     '|': ":door:",  # Closed door
     '/': ":window:",  # Open door
     'V': ":amphora:"  # Vase
+}
+
+CHAR_TO_LATEX_EMOJI = {
+    ' ': "\\gridspace",  # Empty space
+    'R': "\\gridagent",  # Robot
+    'G': "\\gridstar",  # Goal
+    '#': "\\gridwall",  # Wall
+    '.': "\\griddirt",  # Dirt
+    '|': "\\griddoor",  # Closed door
+    '/': "\\gridcloseddoor",  # Open door
+    'V': "\\gridvase"  # Vase
 }
 
 CHAR_TO_COLOUR_OPEN = {
@@ -94,6 +105,10 @@ def char_to_emoji(char):
     return CHAR_TO_EMOJI[char]
 
 
+def char_to_latex_emoji(char):
+    return CHAR_TO_LATEX_EMOJI[char]
+
+
 def char_to_colored_char(char):
     return CHAR_TO_COLOUR_STRING[char]
 
@@ -120,7 +135,6 @@ class Robot:
 
 # TODO - make random seed system
 
-
 def np_grid_to_string(grid: np.array, should_emojify=False, should_color=True, should_bg=False):
     if grid is None:
         return "Not yet initialised"
@@ -130,7 +144,7 @@ def np_grid_to_string(grid: np.array, should_emojify=False, should_color=True, s
         f = char_to_colored_char
     elif should_emojify:
         print("---\n")
-        f = char_to_emoji
+        f = char_to_latex_emoji
     else:
         f = (lambda x: x)
     row_lists = [list(map(f, row)) for row in grid]
@@ -142,6 +156,10 @@ def np_grid_to_string(grid: np.array, should_emojify=False, should_color=True, s
         row_strings = ["".join(row_list) for row_list in row_lists]
         row_strings[0] = " ".join(row_lists[0])
         row_strings[-1] = " ".join(row_lists[-1])
+    if should_emojify:
+        row_strings = ["".join(row_list[1:-1]) for row_list in row_lists[1:-1]]
+        # row_strings[0] = " ".join(row_lists[0])
+        # row_strings[-1] = " ".join(row_lists[-1])
     else:
         row_strings = [" ".join(row_list) for row_list in row_lists]
     one_str = "\n".join(row_strings)
@@ -308,7 +326,7 @@ class Grid(BaseEnv):
         obs = self._get_obs()
         spec_reward = (int(gets_dirt) * self.dirt_value) + \
                       (-0.01 * (dest is None and not is_interact)) + \
-                      (10 * has_won) + \
+                      (5 * has_won) + \
                       (-self.time_step_pentalty)
         if destroys_vase:
             self.vases_smashed += 1
@@ -449,8 +467,8 @@ class Grid(BaseEnv):
         return float(np.sum(diffs))
 
     def _vase_door_distance(self, s1: np.ndarray, s2: np.ndarray,
-                            w_vase: float = 2.0,
-                            w_door: float = 0.2) -> float:
+                            w_vase: float = 1.0,
+                            w_door: float = 0.1) -> float:
         s1_vase_poses = ('V' == s1)
         s2_vase_poses = ('V' == s2)
         vase_diffs = np.bitwise_xor(s1_vase_poses, s2_vase_poses)
@@ -769,7 +787,7 @@ class EasyMuseumGrid(Grid):
 class MuseumRush(Grid):
     def __init__(self):
         super().__init__(height=5, width=5, player_init=(1, 2), goal_loc=None,
-                         dirt_value=0.0, time_step_penalty=0.1)
+                         dirt_value=0.0, time_step_penalty=0.0)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         pass
@@ -781,6 +799,28 @@ class MuseumRush(Grid):
             ['#', ' ', ' ', ' ', '#'],
             ['#', ' ', 'V', ' ', '#'],
             ['#', ' ', 'G', ' ', '#'],
+            ['#', '#', '#', '#', '#']
+
+        ], dtype=np.unicode_)
+        return arr
+
+
+# The agent is in ab EmptyMuseum room with dirt on the floor
+class EmptyDirtyRoom(Grid):
+    def __init__(self):
+        super().__init__(height=5, width=5, player_init=(1, 1), goal_loc=None,
+                         dirt_value=1.0, time_step_penalty=0.0, max_steps=20)
+
+    def _get_object_locations_WDDV(self) -> (list, list, list, list):
+        pass
+
+    def _get_init_grid(self):
+        arr = np.array([
+
+            ['#', '#', '#', '#', '#'],
+            ['#', ' ', ' ', '.', '#'],
+            ['#', ' ', ' ', '.', '#'],
+            ['#', ' ', '.', ' ', '#'],
             ['#', '#', '#', '#', '#']
 
         ], dtype=np.unicode_)
