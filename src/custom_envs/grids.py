@@ -27,7 +27,7 @@ CHAR_TO_PIXEL = {
     '}': (2, 2, 2),  # Conveyor with sushi
     's': (0, 0, 2),  # sushi
 
-    'B': (2, 1, 0)  # Box
+    # 'B': (2, 1, 0)  # Box
 }
 
 CHAR_TO_WORD = {
@@ -47,7 +47,7 @@ CHAR_TO_WORD = {
     '}': "sushi conveyor",  # Conveyor with sushi
     's': "sushi",  # Conveyor with sushi
          
-    'B': "box"  # Box
+    # 'B': "box"  # Box
 }
 
 CHAR_TO_EMOJI = {
@@ -62,7 +62,7 @@ CHAR_TO_EMOJI = {
     '>': ":sushi:",  # Conveyor
     '}': "-",  # Conveyor with sushi
     's': "-",  # Sushi
-    'B': "-"  # Box
+    # 'B': "-"  # Box
 }
 
 CHAR_TO_LATEX_EMOJI = {
@@ -95,7 +95,7 @@ CHAR_TO_COLOUR_OPEN = {
     '}': "grey",  # Sushi Conveyor
     's': "blue",  # Sushi
          
-    'B': "yellow"  # Box
+    # 'B': "yellow"  # Box
 }
 
 CHAR_TO_COLOUR_STRING = dict([
@@ -914,7 +914,7 @@ class SmallMuseumGrid(Grid):
 class EasyDoorGrid(Grid):
 
     def __init__(self):
-        super().__init__(height=4, width=7, player_init=(1, 1), goal_loc=-1)
+        super().__init__(height=4, width=7, player_init=(1, 1), goal_loc=-1, max_steps=50)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         pass
