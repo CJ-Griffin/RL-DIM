@@ -15,9 +15,23 @@ SKEIN_DICT = {
         for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
-    "BoxCorner": [
+    # "BoxCorner": [
+    #     TrainParams(
+    #         env_name="BoxCorner",
+    #         agent_name="QLearner",
+    #         num_episodes=int(1e6),
+    #         gamma=1.0,
+    #         epsilon=0.05,
+    #         mu=float(mu),
+    #         dist_measure_name=D,
+    #     )
+    #     for D in (['perf', 'simple', "rgb", "rev"])
+    #     for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
+    # ],
+
+    "SushiGrid": [
         TrainParams(
-            env_name="BoxCorner",
+            env_name="SushiGrid",
             agent_name="QLearner",
             num_episodes=int(1e6),
             gamma=1.0,
