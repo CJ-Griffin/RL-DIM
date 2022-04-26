@@ -131,7 +131,7 @@ def save_recordings(nept_log: neptune.Run, recordings: dict[list[np.array]]):
         _, h, w = recording[0].shape
         for frame in recording:
             assert frame.shape == (3, h, w), frame.shape
-        recording_scaled = [frame * 255 for frame in recording]
+        recording_scaled = [frame*127 for frame in recording]
         N = len(recording_scaled)
         for i in range(N):
             factor = 0.2 + (0.8 * i / N)

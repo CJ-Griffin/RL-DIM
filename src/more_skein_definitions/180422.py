@@ -11,7 +11,7 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['vase_door', 'simple', "rgb"]
+        for D in ['perf', 'simple', "rgb"]
         for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
                    1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ],
@@ -26,7 +26,7 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['vase_door', 'simple', "rgb"]
+        for D in ['perf', 'simple', "rgb"]
         for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
                    1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ],
@@ -41,7 +41,7 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['vase_door', 'simple', "rgb"]
+        for D in ['perf', 'simple', "rgb"]
         for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
                    1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ],
@@ -56,7 +56,7 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['vase_door', 'simple', "rgb"]
+        for D in ['perf', 'simple', "rgb"]
         for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
                    1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     ],

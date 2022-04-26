@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 mus = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
 
 columns = ["env_name", "mu", "dist_measure_name", "vases_smashed", "spec_score", "doors_left_open"]
-dist_measures = ["vase_door", "simple", "rgb"]
-data = pd.read_csv("RL4YP_final_2.csv")
+dist_measures = ["perf", "simple", "rgb"]
+data = pd.read_csv("RL4YP_final_3.csv")
 print(data.columns)
 renames = dict([(f"parameters/{name}",name) for name in columns])
 data = data.rename(columns=renames)
@@ -55,7 +55,7 @@ for y, env_name in enumerate(["MuseumRush", "EmptyDirtyRoom", "EasyDoorGrid", "S
             ax.set_xticks(mus, ticks)
         if y == 0:
             dist_measure_dict = {
-                "vase_door": "$D_{perf}$",
+                "perf": "$D_{perf}$",
                 "simple": "$D_{simple}$",
                 "rgb": "$D_{RGB}$",
             }
