@@ -1,6 +1,7 @@
 # Useful python libraries
 import argparse
 import datetime
+
 from tqdm import tqdm
 
 import numpy as np
@@ -51,7 +52,8 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
     if agent.REQUIRES_TRAINING:
         episode_scores, total_info = run_episodic(agent=agent,
                                                   env=env,
-                                                  num_episodes=params.num_episodes)
+                                                  num_episodes=params.num_episodes,
+                                                  should_tqdm=params.is_test)
     else:
         episode_scores = []
         total_info = {}
@@ -128,13 +130,16 @@ def run_episodic(agent: Agent,
                  env: gym.Env,
                  num_episodes: int,
                  is_eval: bool = False,
-                 save_freq: int = 1e5,
-                 eval_freq: int = None):
+                 eval_freq: int = None,
+                 should_tqdm: bool = False):
     if eval_freq is None:
         eval_freq = min(int(1e3), num_episodes // 10)
     episode_scores = []
 
-    ep_iter = tqdm(range(num_episodes))
+    if should_tqdm:
+        ep_iter = tqdm(range(num_episodes))
+    else:
+        ep_iter = range(num_episodes)
 
     total_info = {}
 
@@ -155,14 +160,11 @@ def run_episodic(agent: Agent,
                                     env=env,
                                     is_eval=True)
             env.stop_and_log_recording(-ep_num)
-            ep_iter.set_description(f"AS = {eval_info['ep_score']}")
+            if should_tqdm:
+                ep_iter.set_description(f"AS = {eval_info['ep_score']}")
         else:
             eval_info = {}
         update_total_info(total_info, info, eval_info)
-        # if False and nept_log is not None and ep_num % save_freq == 0:
-        #     save_agent_to_neptune(agent=agent, nept_log=nept_log, episode_num=ep_num)
-        # else:
-        #     pass
 
     return episode_scores, total_info
 
@@ -218,7 +220,8 @@ def run_episode(agent: Agent,
         # "action_freqs": action_freqs / (len(action_freqs) + 1),
         "vases_smashed": vases_smashed,
         "doors_left_open": doors_left_open,
-        "sushi_eaten": sushi_eaten}
+        "sushi_eaten": sushi_eaten,
+        "num_steps": num_steps}
 
 
 if __name__ == '__main__':

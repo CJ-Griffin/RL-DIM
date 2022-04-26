@@ -20,7 +20,7 @@ class TrainParams:
     should_debug: bool = False
     should_render: bool = False
     should_profile: bool = False
-    is_test: bool = False
+    is_test: bool = False  # will not do tqdm if not test
     should_skip_neptune: bool = False
     dist_measure_name: str = "null"
     mu: float = 1.0
