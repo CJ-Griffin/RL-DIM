@@ -61,7 +61,7 @@ SKEIN_DICT = {
         TrainParams(
             env_name="EasyDoorGrid",
             agent_name="QLearner",
-            num_episodes=int(1e4),
+            num_episodes=int(1e6),
             gamma=1.0,
             epsilon=0.05,
             mu=float(mu),
