@@ -125,7 +125,7 @@ def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
 
 
 def save_recordings(nept_log: neptune.Run, recordings: dict[list[np.array]]):
-    dir_name = f"logs/episode_gifs/{np.random.randint(100000)}"
+    dir_name = f"logs/episode_gifs/{np.random.randint(10000000)}"
     os.mkdir(dir_name)
     for ep_no, recording in recordings.items():
         _, h, w = recording[0].shape

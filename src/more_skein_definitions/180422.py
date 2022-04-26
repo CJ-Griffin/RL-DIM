@@ -5,15 +5,14 @@ SKEIN_DICT = {
         TrainParams(
             env_name="MuseumRush",
             agent_name="QLearner",
-            num_episodes=int(1e5),
+            num_episodes=int(1e5),  # 1e6
             gamma=1.0,
             epsilon=0.05,
-            mu=mu,
+            mu=float(mu),
             dist_measure_name=D,
         )
-        for D in ['perf', 'simple', "rgb"]
-        for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
-                   1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+        for D in (['perf', 'simple', "rgb", "rev"])
+        for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
     "EmptyDirtyRoom": [
@@ -26,9 +25,8 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['perf', 'simple', "rgb"]
-        for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
-                   1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+        for D in (['perf', 'simple', "rgb", "rev"])
+        for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
     "EasyDoorGrid": [
@@ -41,24 +39,22 @@ SKEIN_DICT = {
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['perf', 'simple', "rgb"]
-        for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
-                   1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+        for D in (['perf', 'simple', "rgb", "rev"])
+        for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
     "SmallMuseumGrid": [
         TrainParams(
             env_name="SmallMuseumGrid",
             agent_name="QLearner",
-            num_episodes=int(1e6),
+            num_episodes=int(5e4), #1e6
             gamma=0.9,
             epsilon=0.05,
             mu=mu,
             dist_measure_name=D,
         )
-        for D in ['perf', 'simple', "rgb"]
-        for mu in [0.0, 0.2, 0.4, 0.6, 0.8,
-                   1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+        for D in (['perf', 'simple', "rgb", "rev"])
+        for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
 }

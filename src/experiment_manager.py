@@ -201,6 +201,7 @@ def run_episode(agent: Agent,
     if isinstance(env, Grid):
         vases_smashed = env.get_vases_smashed()
         doors_left_open = env.get_doors_left_open()
+        sushi_eaten = env.get_num_sushi_eaten()
     else:
         vases_smashed = 0
         doors_left_open = 0
@@ -216,7 +217,8 @@ def run_episode(agent: Agent,
         "dist_score": dist_score,
         # "action_freqs": action_freqs / (len(action_freqs) + 1),
         "vases_smashed": vases_smashed,
-        "doors_left_open": doors_left_open}
+        "doors_left_open": doors_left_open,
+        "sushi_eaten": sushi_eaten}
 
 
 if __name__ == '__main__':
