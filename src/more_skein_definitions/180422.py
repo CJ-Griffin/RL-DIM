@@ -64,6 +64,7 @@ SKEIN_DICT = {
             num_episodes=int(1e6),
             gamma=1.0,
             epsilon=0.05,
+            alpha=0.05,
             mu=float(mu),
             dist_measure_name=D,
         )
