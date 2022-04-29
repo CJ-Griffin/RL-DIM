@@ -46,7 +46,7 @@ CHAR_TO_WORD = {
     '>': "conveyor",  # Conveyor
     '}': "sushi conveyor",  # Conveyor with sushi
     's': "sushi",  # Conveyor with sushi
-         
+
     # 'B': "box"  # Box
 }
 
@@ -94,7 +94,7 @@ CHAR_TO_COLOUR_OPEN = {
     '>': "yellow",  # Conveyor
     '}': "grey",  # Sushi Conveyor
     's': "blue",  # Sushi
-         
+
     # 'B': "yellow"  # Box
 }
 
@@ -575,8 +575,8 @@ class Grid(BaseEnv):
 
     def _perf_distance(self, s1: np.ndarray, s2: np.ndarray,
                        w_vase: float = 0.5,
-                       w_door: float = 0.05,
-                       w_sushi: float = 0.45) -> float:
+                       w_door: float = 0.1,
+                       w_sushi: float = 0.4) -> float:
         s1_vase_poses = ('V' == s1)
         s2_vase_poses = ('V' == s2)
         vase_diffs = np.bitwise_xor(s1_vase_poses, s2_vase_poses)
@@ -914,7 +914,8 @@ class SmallMuseumGrid(Grid):
 class EasyDoorGrid(Grid):
 
     def __init__(self):
-        super().__init__(height=4, width=7, player_init=(1, 1), goal_loc=-1, max_steps=50)
+        super().__init__(height=4, width=5, player_init=(1, 1),
+                         goal_loc=(2, 3), max_steps=50)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         pass
@@ -922,10 +923,10 @@ class EasyDoorGrid(Grid):
     def _get_init_grid(self):
         arr = np.array([
 
-            ['#', '#', '#', '#', '#', '#', '#'],
-            ['#', ' ', ' ', '#', ' ', 'G', '#'],
-            ['#', ' ', ' ', '|', ' ', ' ', '#'],
-            ['#', '#', '#', '#', '#', '#', '#']
+            ['#', '#', '#', '#', '#'],
+            ['#', ' ', '#', 'G', '#'],
+            ['#', ' ', '|', ' ', '#'],
+            ['#', '#', '#', '#', '#']
 
         ], dtype=np.unicode_)
         return arr

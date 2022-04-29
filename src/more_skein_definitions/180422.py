@@ -57,18 +57,18 @@ SKEIN_DICT = {
         for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
-    "EasyDoorGrid": [
+    "EasyDoorGridHighEpsilon": [
         TrainParams(
             env_name="EasyDoorGrid",
             agent_name="QLearner",
-            num_episodes=int(1e6),
+            num_episodes=int(1e5),
             gamma=1.0,
-            epsilon=0.05,
+            epsilon=0.2,
             alpha=0.05,
             mu=float(mu),
+            is_test=True,
             dist_measure_name=D,
         )
-        # for D, mu in [('simple', 2)]
         for D in (['perf', 'simple', "rgb", "rev"])
         for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
