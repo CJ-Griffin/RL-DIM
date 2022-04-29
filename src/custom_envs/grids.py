@@ -688,207 +688,233 @@ class EmptyGrid1D(SimpleGrid):
         super().__init__(height=1, width=5, player_init=(0, 0), goal_loc=None)
 
 
-class TinyEmptyGrid(SimpleGrid):
-    def __init__(self, height=3, width=4, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
+class RandomMuseumRoom(Grid):
 
-
-class SmallEmptyGrid(SimpleGrid):
-    def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-
-class DirtGrid(SimpleGrid):
-    def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-    def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=False)
-
-
-class RandDirtGrid(DirtGrid):
-
-    def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=True)
-
-
-class CleanIt(RandDirtGrid):
     def __init__(self):
-        super().__init__(goal_loc=-1)
+        super().__init__(height=5, width=5, player_init=(1, 1),
+                         goal_loc=(2, 3), max_steps=50)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        return [], [], *self._get_simple_dirts_and_vases(num_dirts=10, random=True)
+        pass
 
-    def _get_has_won(self):
-        return not (self.grid == ".").any()
-
-    def _get_new_goal_loc(self) -> (int, int):
-        return -1
-
-
-class SmallRandDirtGrid(RandDirtGrid):
-
-    def __init__(self, height=3, width=5, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-
-class VaseGrid(SimpleGrid):
-
-    def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-    def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        return [], [], *self._get_simple_dirts_and_vases(num_dirts=0,
-                                                         num_vases=int(self.height * self.width / 10),
-                                                         random=True)
+    def _get_init_grid(self):
+        arr = np.array([
+            ['#', '#', '#', '#', '#'],
+            ['#', ' ', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', '#'],
+            ['#', '#', '#', '#', '#']
+        ], dtype=np.unicode_)
+        locs = [(y, x) for y in range(1, 4) for x in range(1, 4) if (y, x) != (1, 1)]
+        np.random.shuffle(locs)
+        arr[locs[0]] = 'V'
+        arr[locs[1]] = 'V'
+        arr[locs[2]] = '.'
+        arr[locs[3]] = '.'
+        arr[locs[4]] = '.'
+        return arr
 
 
-class WallGrid(Grid):
-    def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
+# class TinyEmptyGrid(SimpleGrid):
+#     def __init__(self, height=3, width=4, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#
+# class SmallEmptyGrid(SimpleGrid):
+#     def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#
+# class DirtGrid(SimpleGrid):
+#     def __init__(self, height=5, width=8, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=False)
+#
 
-    def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        return *self._get_new_wall_and_door_locations(), [], []
-
-    def _get_new_wall_and_door_locations(self):
-        h = self.height
-        w = self.width
-        wall_xs = range(1, w - 2, 2)
-        gap_locs = [h - 1 if j % 2 == 0 else 0 for j in range(len(wall_xs))]
-        locs = []
-        for i, x in enumerate(wall_xs):
-            # Fill all spaces except for the gap
-            gap = gap_locs[i]
-            locs += [(y, x) for y in range(h) if y != gap]
-        return locs, []
-
-
-class SimpleWallGrid(WallGrid):
-    def __init__(self):
-        super().__init__(height=6, width=5, player_init=(0, 0))
-
-    def _get_new_wall_and_door_locations(self):
-        h = self.height
-        locs = [(y, 2) for y in range(h)]
-        remove_ind = np.random.randint(len(locs))
-        locs.remove(locs[remove_ind])
-        return locs, []
-
-
-class SemiRandWallGrid(WallGrid):
-
-    def _get_new_wall_and_door_locations(self):
-        h = self.height
-        w = self.width
-        wall_xs = range(1, w - 2, 2)
-        gap_locs = np.random.randint(low=0, high=h, size=len(wall_xs))
-        locs = []
-        for i, x in enumerate(wall_xs):
-            # Fill all spaces except for the gap
-            gap = gap_locs[i]
-            locs += [(y, x) for y in range(h) if y != gap]
-        return locs, []
-
-
-class DoorGrid(WallGrid):
-
-    def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
-        super().__init__(height, width, player_init, goal_loc, max_steps)
-
-    def _get_new_wall_and_door_locations(self):
-        h = self.height
-        w = self.width
-        wall_xs = range(1, w - 2, 2)
-        door_ys = [h - 1 if j % 2 == 0 else 0 for j in range(len(wall_xs))]
-        door_xs = range(1, w - 2, 2)
-        door_locs = list(zip(door_ys, door_xs))
-        locs = []
-        for i, x in enumerate(wall_xs):
-            # Fill all spaces except for the gap
-            gap = door_ys[i]
-            locs += [(y, x) for y in range(h) if y != gap]
-        return locs, door_locs
-
-
-class MuseumGrid(Grid):
-
-    def __init__(self, room_size=3,
-                 num_rooms_wide=2,
-                 init_door_state: str = "open"):
-        width = ((room_size + 1) * num_rooms_wide) + 1
-        height = width
-        player_init = (1, 1)
-
-        super().__init__(height,
-                         width,
-                         player_init,
-                         goal_loc=-1,
-                         max_steps=100,
-                         dirt_value=1.0,
-                         init_door_state=init_door_state)
-        self.room_size = room_size
-        self.num_rooms_wide = num_rooms_wide
-
-    def get_new_wall_and_door_locations(self) -> (list, list):
-        outer_boundaries = \
-            [(0, x) for x in range(self.width)] + \
-            [(self.height - 1, x) for x in range(self.width)] + \
-            [(y, 0) for y in range(self.height)] + \
-            [(y, self.width - 1) for y in range(self.height)]
-
-        horizontal_boundary_ys = [(self.room_size + 1) * i for i in range(1, self.num_rooms_wide)]
-        vertical_boundary_xs = [(self.room_size + 1) * i for i in range(1, self.num_rooms_wide)]
-        door_locations = []
-        wall_locations = outer_boundaries
-        for y in horizontal_boundary_ys:
-            for x in range(self.width):
-                if x % (self.room_size + 1) == int((self.room_size + 1) / 2):
-                    door_locations.append((y, x))
-                else:
-                    wall_locations.append((y, x))
-        for x in vertical_boundary_xs:
-            for y in range(self.height):
-                if y % (self.room_size + 1) == int((self.room_size + 1) / 2):
-                    door_locations.append((y, x))
-                else:
-                    wall_locations.append((y, x))
-        # wall_locations += [(y, x) for x in range(self.width) for y in horizontal_boundary_ys]
-        # wall_locations += [(y, x) for y in range(self.height) for x in vertical_boundary_xs]
-        return wall_locations, door_locations
-
-    def _get_object_locations_WDDV(self) -> (list, list, list, list):
-        wall_locations, door_locations = self.get_new_wall_and_door_locations()
-        dirt_locations, vase_locations = self.get_dirt_vase_locations()
-        return wall_locations, door_locations, dirt_locations, vase_locations
-
-    def get_dirt_vase_locations(self) -> (list, list):
-        room_corners = [
-            (1 + (room_y * (self.room_size + 1)), 1 + (room_x * (self.room_size + 1)))
-            for room_x in range(self.num_rooms_wide)
-            for room_y in range(self.num_rooms_wide)
-        ]
-        room_locations = [
-            [(y + y1, x + x1) for y1 in range(self.room_size) for x1 in range(self.room_size)]
-            for (y, x) in room_corners
-        ]
-        room_locations = [[loc for loc in room if loc not in [self.player_init, self.goal_loc]]
-                          for room in room_locations]
-        vases_per_room = 1
-        dirt_per_room = 2
-        num_locs = vases_per_room + dirt_per_room
-        vases = []
-        dirts = []
-        for room in room_locations:
-            loc_inds = np.random.choice(len(room), size=num_locs, replace=False)
-            locs = [room[loc_ind] for loc_ind in loc_inds]
-            vases += locs[0:vases_per_room]
-            dirts += locs[vases_per_room:]
-        return dirts, vases
-
-    def _get_has_won(self):
-        return not (self.grid == ".").any()
-
-
+# class RandDirtGrid(DirtGrid):
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         return [], [], *self._get_simple_dirts_and_vases(num_dirts=5, random=True)
+#
+#
+# class CleanIt(RandDirtGrid):
+#     def __init__(self):
+#         super().__init__(goal_loc=-1)
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         return [], [], *self._get_simple_dirts_and_vases(num_dirts=10, random=True)
+#
+#     def _get_has_won(self):
+#         return not (self.grid == ".").any()
+#
+#     def _get_new_goal_loc(self) -> (int, int):
+#         return -1
+#
+#
+# class SmallRandDirtGrid(RandDirtGrid):
+#
+#     def __init__(self, height=3, width=5, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#
+# class VaseGrid(SimpleGrid):
+#
+#     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         return [], [], *self._get_simple_dirts_and_vases(num_dirts=0,
+#                                                          num_vases=int(self.height * self.width / 10),
+#                                                          random=True)
+#
+#
+# class WallGrid(Grid):
+#     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         return *self._get_new_wall_and_door_locations(), [], []
+#
+#     def _get_new_wall_and_door_locations(self):
+#         h = self.height
+#         w = self.width
+#         wall_xs = range(1, w - 2, 2)
+#         gap_locs = [h - 1 if j % 2 == 0 else 0 for j in range(len(wall_xs))]
+#         locs = []
+#         for i, x in enumerate(wall_xs):
+#             # Fill all spaces except for the gap
+#             gap = gap_locs[i]
+#             locs += [(y, x) for y in range(h) if y != gap]
+#         return locs, []
+#
+#
+# class SimpleWallGrid(WallGrid):
+#     def __init__(self):
+#         super().__init__(height=6, width=5, player_init=(0, 0))
+#
+#     def _get_new_wall_and_door_locations(self):
+#         h = self.height
+#         locs = [(y, 2) for y in range(h)]
+#         remove_ind = np.random.randint(len(locs))
+#         locs.remove(locs[remove_ind])
+#         return locs, []
+#
+#
+# class SemiRandWallGrid(WallGrid):
+#
+#     def _get_new_wall_and_door_locations(self):
+#         h = self.height
+#         w = self.width
+#         wall_xs = range(1, w - 2, 2)
+#         gap_locs = np.random.randint(low=0, high=h, size=len(wall_xs))
+#         locs = []
+#         for i, x in enumerate(wall_xs):
+#             # Fill all spaces except for the gap
+#             gap = gap_locs[i]
+#             locs += [(y, x) for y in range(h) if y != gap]
+#         return locs, []
+#
+#
+# class DoorGrid(WallGrid):
+#
+#     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
+#         super().__init__(height, width, player_init, goal_loc, max_steps)
+#
+#     def _get_new_wall_and_door_locations(self):
+#         h = self.height
+#         w = self.width
+#         wall_xs = range(1, w - 2, 2)
+#         door_ys = [h - 1 if j % 2 == 0 else 0 for j in range(len(wall_xs))]
+#         door_xs = range(1, w - 2, 2)
+#         door_locs = list(zip(door_ys, door_xs))
+#         locs = []
+#         for i, x in enumerate(wall_xs):
+#             # Fill all spaces except for the gap
+#             gap = door_ys[i]
+#             locs += [(y, x) for y in range(h) if y != gap]
+#         return locs, door_locs
+#
+# class MuseumGrid(Grid):
+#
+#     def __init__(self, room_size=3,
+#                  num_rooms_wide=2,
+#                  init_door_state: str = "open"):
+#         width = ((room_size + 1) * num_rooms_wide) + 1
+#         height = width
+#         player_init = (1, 1)
+#
+#         super().__init__(height,
+#                          width,
+#                          player_init,
+#                          goal_loc=-1,
+#                          max_steps=100,
+#                          dirt_value=1.0,
+#                          init_door_state=init_door_state)
+#         self.room_size = room_size
+#         self.num_rooms_wide = num_rooms_wide
+#
+#     def get_new_wall_and_door_locations(self) -> (list, list):
+#         outer_boundaries = \
+#             [(0, x) for x in range(self.width)] + \
+#             [(self.height - 1, x) for x in range(self.width)] + \
+#             [(y, 0) for y in range(self.height)] + \
+#             [(y, self.width - 1) for y in range(self.height)]
+#
+#         horizontal_boundary_ys = [(self.room_size + 1) * i for i in range(1, self.num_rooms_wide)]
+#         vertical_boundary_xs = [(self.room_size + 1) * i for i in range(1, self.num_rooms_wide)]
+#         door_locations = []
+#         wall_locations = outer_boundaries
+#         for y in horizontal_boundary_ys:
+#             for x in range(self.width):
+#                 if x % (self.room_size + 1) == int((self.room_size + 1) / 2):
+#                     door_locations.append((y, x))
+#                 else:
+#                     wall_locations.append((y, x))
+#         for x in vertical_boundary_xs:
+#             for y in range(self.height):
+#                 if y % (self.room_size + 1) == int((self.room_size + 1) / 2):
+#                     door_locations.append((y, x))
+#                 else:
+#                     wall_locations.append((y, x))
+#         # wall_locations += [(y, x) for x in range(self.width) for y in horizontal_boundary_ys]
+#         # wall_locations += [(y, x) for y in range(self.height) for x in vertical_boundary_xs]
+#         return wall_locations, door_locations
+#
+#     def _get_object_locations_WDDV(self) -> (list, list, list, list):
+#         wall_locations, door_locations = self.get_new_wall_and_door_locations()
+#         dirt_locations, vase_locations = self.get_dirt_vase_locations()
+#         return wall_locations, door_locations, dirt_locations, vase_locations
+#
+#     def get_dirt_vase_locations(self) -> (list, list):
+#         room_corners = [
+#             (1 + (room_y * (self.room_size + 1)), 1 + (room_x * (self.room_size + 1)))
+#             for room_x in range(self.num_rooms_wide)
+#             for room_y in range(self.num_rooms_wide)
+#         ]
+#         room_locations = [
+#             [(y + y1, x + x1) for y1 in range(self.room_size) for x1 in range(self.room_size)]
+#             for (y, x) in room_corners
+#         ]
+#         room_locations = [[loc for loc in room if loc not in [self.player_init, self.goal_loc]]
+#                           for room in room_locations]
+#         vases_per_room = 1
+#         dirt_per_room = 2
+#         num_locs = vases_per_room + dirt_per_room
+#         vases = []
+#         dirts = []
+#         for room in room_locations:
+#             loc_inds = np.random.choice(len(room), size=num_locs, replace=False)
+#             locs = [room[loc_ind] for loc_ind in loc_inds]
+#             vases += locs[0:vases_per_room]
+#             dirts += locs[vases_per_room:]
+#         return dirts, vases
+#
+#     def _get_has_won(self):
+#         return not (self.grid == ".").any()
+#
+#
 class SmallMuseumGrid(Grid):
     def __init__(self):
         super().__init__(height=6, width=6, player_init=(1, 1),

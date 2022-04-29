@@ -87,4 +87,19 @@ SKEIN_DICT = {
         for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
     ],
 
+    "RandomMuseumRoom": [
+        TrainParams(
+            env_name="RandomMuseumRoom",
+            agent_name="DQN",
+            num_episodes=int(1e6),
+            gamma=0.9,
+            epsilon=0.1,
+            mu=float(mu),
+            is_test=True,
+            dist_measure_name=D,
+        )
+        for D in ['perf']
+        for mu in ([8, 0, 64])
+    ],
+
 }
