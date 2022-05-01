@@ -46,11 +46,11 @@ class ReplayBuffer(object):
 
 class LinearMemory:
     def __init__(self, buffer_size: int, batch_size: int):
-        self.buffer_size = buffer_size
-        self.batch_size = batch_size
+        # self.buffer_size = buffer_size
+        # self.batch_size = batch_size
         field_names = ["state", "action", "reward", "next_state", "done"]
         self.ExperienceType = collections.namedtuple("Experience", field_names=field_names)
-        self.memory = collections.deque(maxlen=self.buffer_size)
+        self.memory = collections.deque()
 
     def __len__(self):
         return len(self.memory)

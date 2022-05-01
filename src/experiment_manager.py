@@ -9,7 +9,7 @@ import gym
 import neptune.new as neptune
 
 # My imports
-from src.agents import Agent
+from src.agents import Agent, QLearner
 from src.custom_envs import Grid
 from src.def_params import SKEIN_DICT
 from src.run_parameters import TrainParams
@@ -188,6 +188,10 @@ def run_episode(agent: Agent,
         num_steps += 1
         if should_render:
             env.render()
+        # if is_eval:
+        #     env.render()
+        #     if agent.__class__.__name__ == "QLearner":
+        #         print(agent._Q[agent.get_hashable_state(state)])
         action = agent.act(state)
         action_freqs[action] += 1
         next_state, reward, done, info = env.step(action)
@@ -212,6 +216,10 @@ def run_episode(agent: Agent,
     if isinstance(env, Grid):
         spec_score = sum(spec_rewards)
         dist_score = sum(dist_rewards)
+    if isinstance(agent, QLearner):
+        td_error = float(sum(agent.td_error_log))/len(agent.td_error_log)
+    else:
+        td_error = 0
     return {
         # "num_steps": num_steps,
         "ep_score": score,
@@ -221,7 +229,9 @@ def run_episode(agent: Agent,
         "vases_smashed": vases_smashed,
         "doors_left_open": doors_left_open,
         "sushi_eaten": sushi_eaten,
-        "num_steps": num_steps}
+        "num_steps": num_steps,
+        "td_error:": td_error
+    }
 
 
 if __name__ == '__main__':

@@ -71,6 +71,7 @@ CHAR_TO_LATEX_EMOJI = {
     'G': "\\gridstar",  # Goal
     '#': "\\gridwall",  # Wall
     '.': "\\griddirt",  # Dirt
+    'V': "\\gridvase",  # Vase
     '|': "\\griddoor",  # Closed door
     '/': "\\gridcloseddoor",  # Open door
     '>': "\\gridconv",  # Conveyor
@@ -941,7 +942,7 @@ class EasyDoorGrid(Grid):
 
     def __init__(self):
         super().__init__(height=4, width=5, player_init=(1, 1),
-                         goal_loc=(2, 3), max_steps=50)
+                         goal_loc=(2, 3), max_steps=100)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         pass
