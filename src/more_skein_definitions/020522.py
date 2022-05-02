@@ -11,7 +11,6 @@ SKEIN_DICT = {
             epsilon=0.1,
             alpha=0.1,
             mu=float(mu),
-            is_test=True,
             dist_measure_name=D,
         )
         for D in (['perf', 'simple', "rgb"])
@@ -27,7 +26,6 @@ SKEIN_DICT = {
             epsilon=0.1,
             alpha=0.1,
             mu=float(mu),
-            is_test=True,
             dist_measure_name=D,
         )
         for D in (['perf', 'simple', "rgb"])
@@ -43,7 +41,6 @@ SKEIN_DICT = {
             epsilon=0.1,
             alpha=0.1,
             mu=float(mu),
-            is_test=True,
             dist_measure_name=D,
         )
         for D in (['perf', 'simple', "rgb"])
@@ -59,7 +56,6 @@ SKEIN_DICT = {
             epsilon=0.1,
             alpha=0.1,
             mu=float(mu),
-            is_test=True,
             dist_measure_name=D,
         )
         for D in (['perf', 'simple', "rgb"])
