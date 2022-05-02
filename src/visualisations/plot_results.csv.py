@@ -20,8 +20,8 @@ def plot1():
     str_mus = ["0", "$2^0$", "$2^1$", "$2^2$", "$2^3$", "$2^4$", "$2^5$", "$2^6$"]
     # str_mus = [" " + str(int(mu)) + " " for mu in mus]
     columns = ["env_name", "mu", "dist_measure_name", "vases_smashed", "spec_score", "doors_left_open", "sushi_eaten"]
-    dist_measures = ["perf", "simple", "rgb", "rev"]
-    env_names = ["MuseumRush", "EasyDoorGrid", "EmptyDirtyRoom", "SmallMuseumGrid", "SushiGrid"]
+    dist_measures = ["perf", "simple", "rgb"]  # , "rev"]
+    env_names = ["MuseumRush", "EasyDoorGrid", "EmptyDirtyRoom", "SmallMuseumGrid"]  # , "SushiGrid"]
     data = pd.read_csv("RL4YP_delta.csv")
     print(data.columns)
     renames = dict([(f"parameters/{name}", name) for name in columns])
@@ -35,13 +35,13 @@ def plot1():
     print(data.env_name.unique())
     fig, axes = plt.subplots(len(env_names),
                              len(dist_measures) + 1,
-                             figsize=(12, 8))
+                             figsize=(9.6, 7.4))
     print(data)
     alpha = 0.8
     for y, env_name in enumerate(env_names):
         df_env = data[data.env_name == env_name].sort_values(by=['mu'])
         ax_im = axes[y, 0]
-        im = plt.imread(f"env_images/{env_name}.png")
+        im = get_im(env_name)
         ax_im.imshow(im)
         ax_im.set_xticks([])
         ax_im.set_yticks([])
@@ -63,17 +63,18 @@ def plot1():
             # Add labels to axes
             if y == 0:
                 dist_measure_dict = {
-                    "perf": "$d_{perf}$",
-                    "simple": "$d_{simple}$",
-                    "rgb": "$d_{RGB}$",
+                    "perf": "$D_{perf}$",
+                    "simple": "$D_{simple}$",
+                    "rgb": "$D_{RGB}$",
                     "rev": "$Rev.$",
+                    # "RR": "Relative Reachability"
                 }
                 ax.set_title(dist_measure_dict[dist_measure])
 
             # Plot env-specific stuff
             if env_name == "MuseumRush":
                 ax.set_ylim(-1.2, 1.2)
-                ax.axhline(y=4.6/5, color=clrs["Blue"], linestyle=':', label="Max. safe score")
+                ax.axhline(y=4.6 / 5, color=clrs["Blue"], linestyle=':', label="Max. safe score")
                 ax.bar(str_mus, - df.vases_smashed, facecolor=clrs["Red"], label="Vases smashed",
                        alpha=alpha)  # , width=0.2)
                 spec_score = df.spec_score / 5
@@ -135,6 +136,28 @@ def plot1():
     plt.savefig("results1.pdf")
 
 
+def get_im(env_name):
+    # return plt.imread(f"env_images/{env_name}.png")
+    import numpy as np
+    from PIL import Image
+
+    path = f"env_images/{env_name}.png"
+
+    img = Image.open(path)
+
+    w = 500
+    h = 500
+    img.thumbnail((w, h), Image.ANTIALIAS)
+    w2, h2 = img.size
+
+    result = Image.new(img.mode, (w, h), "white")
+    result.paste(img, (int((w - w2) / 2), int((h - h2) / 2)))
+
+    a = np.asarray(result)
+    print("hi!")
+    return a
+
+
 # ================== # ================== # ================== # ================== #
 
 def plot2():
@@ -163,7 +186,7 @@ def plot2():
     # reds = [(0.8, 0.0, 0.0), (0.8, 0.4, 0.0), (0.8, 0.6, 0.0)]
     # blues = [(0.0, 0.8, 0.0), (0.0, 0.8, 0.4, 0.0), (0.0, 0.8, 0.6)]
 
-    def plot_spread(ax, xs, ys, col, should_max=False):
+    def plot_spread(ax, xs, ys, col, label, should_max=False):
         if not should_max:
             highs = ys.rolling(res).apply(get_highs)
             mids = ys.rolling(res).mean()
@@ -172,7 +195,7 @@ def plot2():
             highs = ys.rolling(res).max()
             mids = ys.rolling(res).mean()
             lows = ys.rolling(res).min()
-        ax.plot(xs, mids, c=col, label=mu)
+        ax.plot(xs, mids, c=col, label=label)
         ax.fill_between(xs, lows, highs, facecolor=col, alpha=0.5)
 
     # red = reds[i]
@@ -187,14 +210,15 @@ def plot2():
         ax.plot([0, 1e6], [3.0, 3.0], ":", c=blue, label="Max. safe score")
         ax.set_ylim(-2.1, 5.1)
         mu, num = mus[i], nums[i]
+
         rand_data = pd.read_csv(f"DQN_vases_smashed/RLYP-{num}__eval_vases_smashed.csv")
         ys = - rand_data.vases_smashed
-        plot_spread(ax, xs, ys, red)
+        plot_spread(ax, xs, ys, red, label="Vases smashed")
 
         rand_data = pd.read_csv(f"DQN_spec_score/RLYP-{num}__eval_spec_score.csv")
         ys = rand_data.spec_score
+        plot_spread(ax, xs, ys, blue, label="Dirt cleaned")
 
-        plot_spread(ax, xs, ys, blue)
         ax.set_xlabel("Num. episodes")
 
     axes[0].set_yticks([-2, 0, 3, 5])
@@ -208,5 +232,5 @@ def plot2():
 
 
 if __name__ == "__main__":
-    plot1()
+    # plot1()
     plot2()

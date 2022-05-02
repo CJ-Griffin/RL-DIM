@@ -361,7 +361,7 @@ class Grid(BaseEnv):
                 (yv, xv) = (y - yp, x - xp)
                 sushi_dest = (y + yv, x + xv)
                 if self.grid[sushi_dest] in ['#', 'G']:
-                    dest=(self.rob.y, self.rob.x)
+                    dest = (self.rob.y, self.rob.x)
                 elif self.grid[sushi_dest] == '>':
                     self.grid[sushi_dest] = '}'
                 elif self.grid[sushi_dest] == ' ':
@@ -514,20 +514,25 @@ class Grid(BaseEnv):
         return (0 <= x < self.width) and (0 <= y < self.height)
 
     def _get_dist_term(self, s_t: np.ndarray, s_tp1: np.ndarray) -> float:
-        if not self.should_calculate_baseline:
-            d_t = self.dist_measure(self.s0_grid, s_t)
-            d_tp1 = self.dist_measure(self.s0_grid, s_tp1)
+        if self.dist_measure in [self._reversibility_impact, self._relative_reachability]:
+            # Not actually a distance term but another approach!
+            assert not self.should_calculate_baseline
+            return self.dist_measure(self.s0_grid, s_tp1)
         else:
-            self.baseline_grid_tp1 = self.baseline_env.grid
+            if not self.should_calculate_baseline:
+                d_t = self.dist_measure(self.s0_grid, s_t)
+                d_tp1 = self.dist_measure(self.s0_grid, s_tp1)
+            else:
+                self.baseline_grid_tp1 = self.baseline_env.grid
 
-            d_t = self.dist_measure(self.baseline_grid_t, s_t)
-            d_tp1 = self.dist_measure(self.baseline_grid_tp1, s_tp1)
-            self.baseline_grid_t = self.baseline_grid_tp1.copy()
-            self.baseline_grid_tp1 = None
-        # Can't include gamma term in practice!
-        # See: https://ai.stackexchange.com/questions/6314/what-should-i-do-when-the-potential-value-of-a-state-is-too-high
-        return (d_tp1) - d_t
-        # return (self.gamma * d_tp1) - d_t
+                d_t = self.dist_measure(self.baseline_grid_t, s_t)
+                d_tp1 = self.dist_measure(self.baseline_grid_tp1, s_tp1)
+                self.baseline_grid_t = self.baseline_grid_tp1.copy()
+                self.baseline_grid_tp1 = None
+            # Can't include gamma term in practice!
+            # See: https://ai.stackexchange.com/questions/6314/what-should-i-do-when-the-potential-value-of-a-state-is-too-high
+            return (d_tp1) - d_t
+            # return (self.gamma * d_tp1) - d_t
 
     def _get_distance_measure(self, name: str):
         dct = {
@@ -536,6 +541,7 @@ class Grid(BaseEnv):
             "rgb": self._rgb_distance,
             "perf": self._perf_distance,
             "rev": self._reversibility_impact,
+            "RR": self._relative_reachability,
         }
         if name not in dct.keys():
             erstr = f"Distance measure named {name} not defined in {list(dct.keys())}"
@@ -563,7 +569,7 @@ class Grid(BaseEnv):
 
     def _reversibility_impact(self, s1: np.ndarray, s2: np.ndarray):
         # In our limited environment, we use a shortcut to calculate reversibility
-        # Since there are only 3 irreversible actions, we can just check if any have occurred
+        # Since there are only 3 irreversible changes, we can just check if any have occurred
         s1 = s1[1:-1, 1:-1]
         s2 = s2[1:-1, 1:-1]
         if np.bitwise_xor((s1 == 'V'), (s2 == 'V')).any():
@@ -601,6 +607,41 @@ class Grid(BaseEnv):
         return float((w_vase * vase_normed) +
                      (w_door * cd_normed) +
                      (w_sushi * np.abs(num_sushi1 - num_sushi2))) / norm_div
+
+    def _relative_reachability(self, s1: np.ndarray, s2: np.ndarray):
+        """
+        In the static gridworlds, the set of all states reachable from the current state
+        is given by:
+         3^(#vases) * 2^(#dirts) * 2^(#doors) * (#player positions)
+        Since vase squares can contain a vase (1) be turned into dirt (2) or be empty (3)
+        Dirt squares can contain dirt (1) or be empty (2)
+        Doors can be open (1) or closed (2)
+
+        Since doors can always be closed again, and the player position can always be changed,
+        in our environment we can calculate relative reachability as (proportional to):
+        3^(#vases) * 2^(#numdoors)
+
+        Further, in static, deterministic environments s_0=s^t_c can reach any state,
+        therefore, we don't need to exclude any states for being counterfactually unreachable:
+        3^(#num-current-vases) * 2^(#num-current-dirts)
+
+        However, we do need to normalise with respect to the total number of possible states
+            given by the number of states reachable in the baseline
+        3^(#num-current-vases - #num-total-vases) * 2^(#num-current-dirts - #num-total-dirts)
+        or 3^(a-b) * 2^(c-d)
+        NOTE that relative reachability with an uniformed prior penalises
+        the destruction of later vases far less.
+        It also continuous penalising afterwards
+        Finally - the RR is actually a reward for maintaining option value,
+        rather than a penalty for losing it.
+        :return:
+        """
+        a = np.sum(s2 == 'V')
+        b = np.sum(s1 == 'V')
+        c = np.sum(s2 == '.')
+        d = np.sum(s1 == '.')
+        # print(a,b,c,d)
+        return  - (3.0 ** (a - b)) * (2.0 ** (c - d))
 
 
 # Tests option-value, for ease of implementation we use sushi instead of a box but it's identical
@@ -943,7 +984,7 @@ class EasyDoorGrid(Grid):
 
     def __init__(self):
         super().__init__(height=4, width=5, player_init=(1, 1),
-                         goal_loc=(2, 3), max_steps=100)
+                         goal_loc=(2, 3), max_steps=30)
 
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         pass
