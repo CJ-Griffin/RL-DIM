@@ -63,7 +63,7 @@ class LookupLearner(QsaLearner):
         raise NotImplementedError
 
     def get_hashable_state(self, state):
-        if not isinstance(state, collections.Hashable):
+        if not isinstance(state, collections.abc.Hashable):
             # If the state is mutable, hash it instead
             if isinstance(state, np.ndarray):
                 # check whether it is a 1D, small shape

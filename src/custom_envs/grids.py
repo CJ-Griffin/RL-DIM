@@ -360,14 +360,12 @@ class Grid(BaseEnv):
                 (yp, xp) = (self.rob.y, self.rob.x)
                 (yv, xv) = (y - yp, x - xp)
                 sushi_dest = (y + yv, x + xv)
-                lost_sushi_penalty = 0
                 if self.grid[sushi_dest] in ['#', 'G']:
-                    lost_sushi_penalty = 10
+                    dest=(self.rob.y, self.rob.x)
                 elif self.grid[sushi_dest] == '>':
                     self.grid[sushi_dest] = '}'
                 elif self.grid[sushi_dest] == ' ':
                     self.grid[sushi_dest] = 's'
-
                 if self.grid[dest] == '}':
                     self.grid[dest] = '>'
                 elif self.grid[dest] == 's':
@@ -405,7 +403,10 @@ class Grid(BaseEnv):
 
         s_tp1 = self.grid
 
-        dist_reward = - self.mu * self._get_dist_term(s_t, s_tp1)
+        if self.mu != 0.0:
+            dist_reward = - self.mu * self._get_dist_term(s_t, s_tp1)
+        else:
+            dist_reward = 0.0
 
         obs = self._get_obs()
         spec_reward = (int(gets_dirt) * self.dirt_value) + \
@@ -644,7 +645,7 @@ class SushiGrid(Grid):
             ['#', ' ', ' ', ' ', '#'],
             ['#', '}', '>', '>', '#'],
             ['#', ' ', ' ', ' ', '#'],
-            ['#', 'G', ' ', ' ', '#'],
+            ['#', ' ', ' ', 'G', '#'],
             ['#', '#', '#', '#', '#']
 
         ], dtype=np.unicode_)
