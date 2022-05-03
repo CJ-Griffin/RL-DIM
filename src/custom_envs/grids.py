@@ -211,7 +211,7 @@ class Grid(BaseEnv):
 
         self.mu = Exception("This should have been changed")
         self.gamma = Exception("This should have been changed")
-        self.dist_measure = Exception("This should have been changed")
+        self.dist_measure = self._uninitialised_dm
 
         self.init_door_state = init_door_state
         self.baseline_env = None
@@ -516,8 +516,11 @@ class Grid(BaseEnv):
     def _get_dist_term(self, s_t: np.ndarray, s_tp1: np.ndarray) -> float:
         if self.dist_measure in [self._reversibility_impact, self._relative_reachability]:
             # Not actually a distance term but another approach!
-            assert not self.should_calculate_baseline
+            # assert not self.should_calculate_baseline
             return self.dist_measure(self.s0_grid, s_tp1)
+        # elif self.dist_measure == self._stepwise_AU:
+        #     assert not self.should_calculate_baseline
+        #     return self.dist_measure(s_t, s_tp1)
         else:
             if not self.should_calculate_baseline:
                 d_t = self.dist_measure(self.s0_grid, s_t)
@@ -542,11 +545,18 @@ class Grid(BaseEnv):
             "perf": self._perf_distance,
             "rev": self._reversibility_impact,
             "RR": self._relative_reachability,
+            # "swAU": self._stepwise_AU,
         }
         if name not in dct.keys():
             erstr = f"Distance measure named {name} not defined in {list(dct.keys())}"
             raise KeyError(erstr)
         return dct[name]
+
+    def _uninitialised_dm(self, s1: np.ndarray, s2: np.ndarray) -> float:
+        raise Exception("This should have been changed")
+
+    # def _stepwise_AU(self, s1: np.ndarray, s2: np.ndarray) -> float:
+    #     return self._relative_reachability(s1, s2)
 
     def _null_distance(self, s1: np.ndarray, s2: np.ndarray) -> float:
         return 0.0
@@ -641,7 +651,7 @@ class Grid(BaseEnv):
         c = np.sum(s2 == '.')
         d = np.sum(s1 == '.')
         # print(a,b,c,d)
-        return  - (3.0 ** (a - b)) * (2.0 ** (c - d))
+        return - (3.0 ** (a - b)) * (2.0 ** (c - d))
 
 
 # Tests option-value, for ease of implementation we use sushi instead of a box but it's identical

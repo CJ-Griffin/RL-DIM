@@ -231,6 +231,95 @@ def plot2():
     plt.savefig("results2.pdf")
 
 
+def plot3():
+    data = pd.read_csv("dynamic_comparison.csv")
+    # print(data.columns)
+    columns = ["env_name", "mu", "dist_measure_name", "spec_score", "sushi_eaten", "num_steps"]
+    dist_measures = ["perf", "simple", "rgb"]  # , "rev"]
+    env_names = ["MuseumRush", "EasyDoorGrid", "EmptyDirtyRoom", "SmallMuseumGrid"]  # , "SushiGrid"]
+    print(data.columns)
+    renames = dict([(f"parameters/{name}", name) for name in columns])
+    data = data.rename(columns=renames)
+    # print(data.columns)
+    renames = dict([(f"eval/{name} (last)", name) for name in columns])
+    data = data.rename(columns=renames)
+    # print(data.columns)
+    data = data.filter(columns)
+    print(data.columns)
+    print(data.env_name.unique())
+    sushi_interference = -(1 - data.sushi_eaten)
+    print(sushi_interference)
+    print(data)
+    fig, axes = plt.subplots(1, 2)
+    ax = axes[1]
+    ax.set_ylim(-1.2, 8.2)
+    ax.set_yticks([-1, 0, 1])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(True)
+    ax.bar(data.dist_measure_name, sushi_interference, facecolor=clrs["Orange Red"], label="Sushi interfer.",
+           alpha=0.8)  # , width=0.2)
+    ax.bar(data.dist_measure_name, data.num_steps, facecolor=clrs["Green"], label="Sushi interfer.",
+           alpha=0.8)  # , width=0.2)
+    plt.show()
+
+
+def plot3():
+    columns = ["env_name", "mu", "dist_measure_name", "spec_score", "sushi_eaten", "num_steps"]
+    data = pd.read_csv("dynamic_comparison.csv")
+    renames = dict([(f"parameters/{name}", name) for name in columns])
+    data = data.rename(columns=renames)
+    renames = dict([(f"eval/{name} (last)", name) for name in columns])
+    data = data.rename(columns=renames)
+    data = data.filter(columns).sort_values(by=['num_steps'])
+    print(data.columns)
+    fig, axes = plt.subplots(1, 2, figsize=(3 * 1.6, 2))
+    print(data)
+
+    env_name = "SushiGrid"
+    ax_im = axes[0]
+    im = get_im(env_name)
+    ax_im.imshow(im)
+    ax_im.set_xticks([])
+    ax_im.set_yticks([])
+    ax_im.set_ylabel(env_name)
+    ax_im.set_frame_on(False)
+
+    ax = axes[1]
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(True)
+    ax.axhline(y=0, color='black', linewidth=0.8)  # , linestyle=':')
+
+    dist_measure_dict = {
+        "perf": "$D_{perf}$",
+        "zero": "$0$",
+        "RR": "$R.R.$",
+        "rev": "$Rev.$",
+        # "RR": "Relative Reachability"
+    }
+
+    ax.set_ylim(-1.2, 1.2)
+    ax.set_yticks([-1, 0, 1])
+    print(data)
+    ax.bar(data.dist_measure_name.map(dist_measure_dict), - 1 + data.sushi_eaten, facecolor=clrs["Orange Red"],
+           label="Sushi interfer.",
+           alpha=0.8)  # , width=0.2)
+    # spec_score = df.spec_score / 5
+
+    ax.bar(data.dist_measure_name.map(dist_measure_dict), data.num_steps / 7, facecolor=clrs["Green"],
+           label="Goal reached", alpha=0.8)  # , width=0.2)
+
+    # fig.legend(handles, labels, loc="center right", fontsize=8)
+    ax.legend(loc="lower right", fontsize=8)
+    plt.tight_layout()
+    plt.show()
+    plt.savefig("results3.pdf")
+
+
 if __name__ == "__main__":
     # plot1()
-    plot2()
+    # plot2()
+    plot3()
