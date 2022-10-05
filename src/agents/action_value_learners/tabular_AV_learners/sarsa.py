@@ -1,7 +1,7 @@
-from src.agents.QsaLearners.QsaLookups.lookup_learner import LookupLearner
+from src.agents.action_value_learners.tabular_AV_learners.tabular_AV import TabularAV
 
 
-class SARSA(LookupLearner):
+class SARSA(TabularAV):
 
     def should_update(self, done: bool) -> bool:
         return len(self._memory) >= self._batch_size

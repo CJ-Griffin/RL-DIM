@@ -1,17 +1,15 @@
-import neptune.new
-
 import gym
 import torch
 import numpy as np
 
-from src.agents.QsaLearners.qsalearner import QsaLearner
+from src.agents.action_value_learners.action_value_learner import ActionValueLearner
 from src.agents.networks import DNN, CNN, CNN2, CNN3
-from src.agents.QsaLearners.replay_buffer import ReplayBuffer
+from src.agents.action_value_learners.replay_buffer import ReplayBuffer
 from src.run_parameters import TrainParams
-from src.generic_utils import vectorise_state, imageify_state
+from src.utils.generic_utils import vectorise_state, imageify_state
 
 
-class DQN(QsaLearner):
+class DQN(ActionValueLearner):
     REQUIRES_FINITE_STATE_SPACE = False
     NETWORK_CLASS = DNN
 
@@ -87,10 +85,7 @@ class DQN(QsaLearner):
 
     def debug_print(self, Q_next_states, actions, dones, prevs, rewards, states, targets, loss):
         for i in range(len(states)):
-            if states[i].shape[0] >= 3:
-                print(states[i].view(3, -1))
-            else:
-                print(states[i])
+            print(states[i])
             print(f"Action {actions[i]} gave rewards {rewards[i]}")
             print(f"target = {targets[i]} = (gamma * {Q_next_states[i]}) + {rewards[i]}")
             print(f"Previous Q-value: {prevs[i]}")
@@ -101,9 +96,7 @@ class DQN(QsaLearner):
             print()
             if dones[i]: print("DONE\n")
             print()
-        # print(Qs)
-        # print("State-action pairs from update")
-        # print([(int(a), float(tar)) for (a, tar) in zip(list(actions), list(targets))])
+
         print("loss ", loss, "=" * 80)
 
     def _Q_to_string(self):

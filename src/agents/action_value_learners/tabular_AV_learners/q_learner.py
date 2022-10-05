@@ -1,12 +1,12 @@
 import collections
 
 import gym
-from src.agents.QsaLearners.QsaLookups.lookup_learner import LookupLearner
-from src.generic_utils import imshow_grid
+from src.agents.action_value_learners.tabular_AV_learners.tabular_AV import TabularAV
+from src.utils.generic_utils import imshow_grid
 from src.run_parameters import TrainParams
 
 
-class QLearner(LookupLearner):
+class QLearner(TabularAV):
 
     def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):
         super().__init__(action_space, state_space, params)

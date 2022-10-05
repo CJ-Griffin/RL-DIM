@@ -1,9 +1,8 @@
 import numpy as np
+from src.agents.action_value_learners.tabular_AV_learners.tabular_AV import TabularAV
 
-from src.agents.QsaLearners.QsaLookups.lookup_learner import LookupLearner
 
-
-class TabularMC(LookupLearner):
+class MonteCarlo(TabularAV):
     REQUIRES_FINITE_STATE_SPACE = True
 
     def should_update(self, done: bool) -> bool:

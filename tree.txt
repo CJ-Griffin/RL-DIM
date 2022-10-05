@@ -1,0 +1,58 @@
+.
+├── README.md
+├── __pycache__
+├── conda_env.yml
+├── gym
+│   └── ...
+├── logs
+│   └── ...
+├── models
+│   └── ...
+└── src
+    ├── agents
+    │   └── ...
+    ├── custom_envs
+    │   └── ...
+    ├── experiment_manager.py
+    ├── logger.py
+    ├── more_skein_definitions
+    │   └── ...
+    ├── run_parameters.py
+    ├── skein_definitions.py
+    ├── utils
+    │   ├── generic_utils.py
+    │   └── rl_utils.py
+    └── visualisations
+        ├── draw_agent_network.py
+        ├── inspecting_remote_logs.py
+        ├── plot_results.py
+        ├── results
+        │   └── ...
+        └── vis_envs.py
+
+
+│   ├── agents
+│   │   ├── __init__.py
+│   │   ├── action_value_learners
+│   │   │   ├── __init__.py
+│   │   │   ├── dqn.py
+│   │   │   ├── replay_buffer.py
+│   │   │   └── tabular_AV_learners
+│   │   │       ├── __init__.py
+│   │   │       ├── monte_carlo.py
+│   │   │       ├── q_learner.py
+│   │   │       ├── sarsa.py
+│   │   │       └── tabular_AV.py
+│   │   ├── agent.py
+│   │   ├── human_agent.py
+│   │   ├── networks.py
+│   │   └── random_agent.py
+
+
+├── custom_envs
+│   ├── __init__.py
+│   ├── bandit_env.py
+│   ├── base_env.py
+│   ├── biased_coins_env.py
+│   ├── grid_envs.py
+│   └── mnist_env.py

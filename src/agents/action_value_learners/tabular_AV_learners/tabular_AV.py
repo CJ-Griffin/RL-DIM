@@ -1,12 +1,12 @@
 import gym
-from src.agents.QsaLearners.qsalearner import QsaLearner, LinearMemory
+from src.agents.action_value_learners.action_value_learner import ActionValueLearner, LinearMemory
 from src.run_parameters import TrainParams
 import xxhash
 import collections
 import numpy as np
 
 
-class LookupLearner(QsaLearner):
+class TabularAV(ActionValueLearner):
     REQUIRES_FINITE_STATE_SPACE = True
 
     def __init__(self, action_space: gym.Space, state_space: gym.Space, params: TrainParams):

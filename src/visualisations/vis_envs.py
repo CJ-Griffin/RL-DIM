@@ -9,7 +9,7 @@ Grids = [
     RandomMuseumRoom,
     # SimpleGrid,
     SmallMuseumGrid,
-    SushiGrid
+    SushiGrid,
 ]
 
 print("""

@@ -19,7 +19,7 @@ ALL_GRIDS.remove("Grid")
 SOME_AGENT_NAMES = [
     "RandomAgent",
     "HumanAgent",
-    "TabularMC",
+    "MonteCarlo",
     "SARSA",
     "QLearner",
     "DQN",
@@ -35,10 +35,36 @@ SOME_ENV_NAMES = [
     "RandDirtGrid",
     "WallGrid",
     "SemiRandWallGrid",
+    "Repulsion"
     # "SemiRandDirtWallGrid"
 ]
 
 SKEIN_DICT = {
+    "temp": [
+        TrainParams(
+            env_name="Repulsion",
+            agent_name="HumanAgent",
+            num_episodes=1,
+            gamma=0.9,
+            is_test=True,
+            should_render=True,
+            should_debug=True
+        )
+    ],
+
+
+    "DQN-cont": [
+        TrainParams(
+            env_name="Repulsion",
+            agent_name="DQN",
+            num_episodes=int(1e5),
+            gamma=0.95,
+            is_test=True,
+            # should_render=True,ßßß
+            # should_debug=True
+        )
+    ],
+
 
     # "temp": [
     #     TrainParams(
@@ -158,16 +184,16 @@ SKEIN_DICT = {
     #     )
     # ],
     #
-    # "test_all_agents": list(reversed([
-    #     TrainParams(
-    #         env_name="SmallEmptyGrid",
-    #         agent_name=agent_name,
-    #         num_episodes=1000,
-    #         gamma=0.9,
-    #         should_debug=False,
-    #         is_test=True
-    #     ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
-    # ])),
+    "test_all_agents": list(reversed([
+        TrainParams(
+            env_name="MuseumRush",
+            agent_name=agent_name,
+            num_episodes=1000,
+            gamma=0.9,
+            should_debug=False,
+            is_test=True
+        ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
+    ])),
     #
     # "train_empty_grid": list(reversed([
     #     TrainParams(

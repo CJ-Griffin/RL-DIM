@@ -2,12 +2,12 @@ import numpy as np
 from src.agents.agent import Agent
 import gym
 from src.run_parameters import TrainParams
-from src.generic_utils import get_action_list
+from src.utils.generic_utils import get_action_list
 from abc import abstractmethod
-from src.agents.QsaLearners.replay_buffer import LinearMemory
+from src.agents.action_value_learners.replay_buffer import LinearMemory
 
 
-class QsaLearner(Agent):
+class ActionValueLearner(Agent):
     REQUIRES_TRAINING = True
     REQUIRES_FINITE_ACTION_SPACE = True
 

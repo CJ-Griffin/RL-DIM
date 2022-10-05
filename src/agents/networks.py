@@ -1,7 +1,7 @@
 import torch
 
 import gym
-from src.generic_utils import vectorise_state, get_action_list, imageify_state
+from src.utils.generic_utils import vectorise_state, get_action_list, imageify_state
 
 
 class DNN(torch.nn.Module):

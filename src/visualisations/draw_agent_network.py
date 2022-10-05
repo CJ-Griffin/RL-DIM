@@ -1,7 +1,7 @@
 import torch
 import torchviz
 from src.agents import DQN
-from src.rl_utils import load_agent_from_neptune
+from src.utils.rl_utils import load_agent_from_neptune
 
 
 def draw_agent_network(agent: DQN, eg_input: torch.Tensor):

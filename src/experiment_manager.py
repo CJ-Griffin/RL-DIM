@@ -6,15 +6,14 @@ from tqdm import tqdm
 
 import numpy as np
 import gym
-import neptune.new as neptune
 
 # My imports
 from src.agents import Agent, QLearner
-from src.custom_envs import Grid
-from src.def_params import SKEIN_DICT
+from src.custom_envs import Grid, Repulsion
+from src.skein_definitions import SKEIN_DICT
 from src.run_parameters import TrainParams
-from src.generic_utils import init_neptune_log, reduce_res_freq, save_recordings
-from src.rl_utils import get_env, get_agent, save_agent_to_neptune
+from src.utils.generic_utils import init_neptune_log, reduce_res_freq, save_recordings
+from src.utils.rl_utils import get_env, get_agent, save_agent_to_neptune
 
 
 def run_skein(params_list: list[TrainParams], skein_id: str,
@@ -47,7 +46,8 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
     print(params)
     env = get_env(params)
     agent = get_agent(env, params)
-    env.render()
+    # TODO sort what happens when you render cont_env
+    env.render(mode="")
     agent.render()
     if agent.REQUIRES_TRAINING:
         episode_scores, total_info = run_episodic(agent=agent,
@@ -180,7 +180,7 @@ def run_episode(agent: Agent,
     rewards = []
     spec_rewards = []
     dist_rewards = []
-    action_freqs = np.zeros(5)
+    action_freqs = np.zeros(9)
 
     agent.is_eval_mode = is_eval
 
@@ -211,9 +211,10 @@ def run_episode(agent: Agent,
     else:
         vases_smashed = 0
         doors_left_open = 0
+        sushi_eaten = 0
     env.close()
     score = sum(rewards)  # TODO consider different episode scores
-    if isinstance(env, Grid):
+    if isinstance(env, Grid) or isinstance(env, Repulsion):
         spec_score = sum(spec_rewards)
         dist_score = sum(dist_rewards)
     if isinstance(agent, QLearner):

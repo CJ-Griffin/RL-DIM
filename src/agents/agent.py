@@ -6,7 +6,7 @@ import torch
 
 import gym
 from src.run_parameters import TrainParams
-from src.generic_utils import is_space_finite
+from src.utils.generic_utils import is_space_finite
 
 CHARS = list("QWERTYUIOPASDFGHJKLZXCVBNM1234567890")
 
