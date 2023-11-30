@@ -6,10 +6,15 @@ from src import custom_envs, agents
 
 @dataclass
 class TrainParams:
+    # MDP
     env_name: str
+    gamma: float
+    dist_measure_name: str = "null"
+    mu: float = 1.0
+
+    # Agent
     agent_name: str
     num_episodes: int
-    gamma: float
     alpha: float = 0.05
     epsilon: float = 0.05
     buffer_size: int = int(5e4)
@@ -17,13 +22,13 @@ class TrainParams:
     update_freq: int = 100
     q_init: float = 0.0
     learning_rate: float = 1e-3
+
+    # Experiment management params
     should_debug: bool = False
     should_render: bool = False
     should_profile: bool = False
     is_test: bool = False  # will not do tqdm if not test
     should_skip_neptune: bool = False
-    dist_measure_name: str = "null"
-    mu: float = 1.0
 
     def __post_init__(self):
         self.num_episodes = force_integer(self.num_episodes)

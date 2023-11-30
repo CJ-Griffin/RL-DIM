@@ -1,4 +1,4 @@
-import neptune.new as neptune
+import neptune as neptune
 import numpy as np
 import torch
 
@@ -49,9 +49,9 @@ def save_agent_to_neptune(agent: Agent, nept_log: neptune.Run, episode_num: int)
 def load_agent_from_neptune(run_name: str, ep_no: int) -> torch.nn.Module:
     destination_path = f"models/temp/download_{run_name}_{ep_no}.pt"
 
-    nept_log = neptune.init(project="cj.griffin/RL4YP",
-                            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ==",
-                            run=run_name)
+    nept_log = neptune.init_project(project="cebrewer/RL-DIM",
+                            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiY2Y4YzIwMi1kN2RhLTQ1MzYtYjdjZS0zNzg2ZTU3NGVlYWYifQ===="
+                                    )
     nept_log[f"model_saves/q_net-{ep_no}"].download(destination_path)
     nept_log.stop()
 

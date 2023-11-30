@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from array2gif import write_gif
 from matplotlib import pyplot as plt
-from neptune import new as neptune
-from neptune.new.exceptions import CannotResolveHostname
+import neptune
+from neptune.exceptions import CannotResolveHostname
 import gym
 from src.logger import Logger
 from src.run_parameters import TrainParams
@@ -90,27 +90,58 @@ def are_sets_independent(sets: set[set]) -> bool:
     return True
 
 
+# def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
+#     if params.should_skip_neptune:
+#         return None
+#     elif False:
+#         logger = Logger()
+#         logger["parameters"] = params.get_dict()
+#         logger["parameters"] = params.get_dict()
+#         logger["skein_id"] = skein_id
+#         logger["experiment_name"] = experiment_name
+#         return logger
+#     else:
+#         try:
+#             # token = os.getenv('NEPTUNE_API_TOKEN')
+#
+#             # # I'm exposing my token since its already exposed and contains no sensitive data.
+#             token = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubm" \
+#                     "VwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ=="
+#
+#             nept_log = neptune.init(project="cj.griffin/RL4YP",
+#                                     api_token=token,
+#                                     mode="async")
+#             nept_log["parameters"] = params.get_dict()
+#             nept_log["skein_id"] = skein_id
+#             nept_log["experiment_name"] = experiment_name
+#             nept_log["true_start"] = datetime.now()
+#             return nept_log
+#         except CannotResolveHostname as connect_error:
+#             if params.is_test:
+#                 print("FAILED TO CONNECT TO NEPTUNE")
+#                 return None
+#             else:
+#                 raise connect_error
+
+# try this:
+import neptune
+
 def init_neptune_log(params: TrainParams, skein_id: str, experiment_name: str):
     if params.should_skip_neptune:
         return None
-    elif False:
-        logger = Logger()
-        logger["parameters"] = params.get_dict()
-        logger["parameters"] = params.get_dict()
-        logger["skein_id"] = skein_id
-        logger["experiment_name"] = experiment_name
-        return logger
     else:
         try:
-            # token = os.getenv('NEPTUNE_API_TOKEN')
+            # Your Neptune API token
+            token = "your_neptune_api_token"
 
-            # # I'm exposing my token since its already exposed and contains no sensitive data.
-            token = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubm" \
-                    "VwdHVuZS5haSIsImFwaV9rZXkiOiI5ZjE4NGNlOC0wMmFjLTQxZTEtODg1ZC0xMDRhMTg3YjI2ZjAifQ=="
-
-            nept_log = neptune.init(project="cj.griffin/RL4YP",
-                                    api_token=token,
-                                    mode="async")
+            # Initialize a Neptune experiment
+            nept_log = neptune.init_run(
+                project="cebrewer/RL-DIM",
+                api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJiY2Y4YzIwMi1kN2RhLTQ1MzYtYjdjZS0zNzg2ZTU3NGVlYWYifQ==",
+            # remove api token before putting on the internet
+            )
+            # Log parameters and other information
+            # Log parameters and other information
             nept_log["parameters"] = params.get_dict()
             nept_log["skein_id"] = skein_id
             nept_log["experiment_name"] = experiment_name

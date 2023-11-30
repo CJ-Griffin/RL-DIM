@@ -191,7 +191,7 @@ SKEIN_DICT = {
             num_episodes=1000,
             gamma=0.9,
             should_debug=False,
-            is_test=True
+            is_test=False
         ) for agent_name in SOME_AGENT_NAMES if agent_name != "HumanAgent"
     ])),
     #

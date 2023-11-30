@@ -2,7 +2,7 @@ import os
 from typing import Optional, Union, Dict, Any
 
 import numpy as np
-from neptune.new import Run
+from neptune import Run
 
 
 class Log:
