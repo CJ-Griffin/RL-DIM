@@ -37,6 +37,26 @@ conda install pytorch torchvision torchaudio -c pytorch
 conda install -c conda-forge neptune-client emoji tqdm matplotlib array2gif
 pip install xxhash enquiries torchviz
 ```
+## Running experiments
+To run experiments, use the following command structure:
+```commandline
+python experimentmanager.py [experiment set] [additional arguments]
+```
+Where `[experiment set]` is the name of the experiment you wish to run. These names correspond to keys in `SKEIN_DICT`, which is defined in `skein_definitions.py` and in the files in the 'more_skein_definitions' folder.
+
+### Additional arguments
+* -p: When used and if is_parallel is set to True for the experiment, it enables parallel execution of experiments.
+* -t: Sets the number of episodes to 1000 and sets is_test to True for a quicker trial run of the experiment.
+
+### Example
+The following trains a deep Q-learning agent in the Repulsion environment, for 100000 episodes, with discount factor of 0.95:
+```commandline
+python experimentmanager.py DQN-cont
+```
+## Code structure
+`experiment_manager.py` defines code for managing experiments, including rendering, recording, and returning scores. The folders `agents` and `custom_envs` contain files defining agents and environments, respectively, used in experiments. Experiments are stored in `SKEIN_DICT`, in `skein_definitions.py` and in the `more_skein_definitions` folder.
+
+For more details on the project structure, see `tree.py`. 
 
 ## Code tree for experiment_manager.py
 

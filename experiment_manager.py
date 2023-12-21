@@ -236,6 +236,8 @@ def run_episode(agent: Agent,
 
 
 if __name__ == '__main__':
+    import sys
+    sys.path.insert(0, '/home/catherine/RL-DIM')
     g_prsr = argparse.ArgumentParser()
     g_prsr.add_argument("-e", "--experiment_name",
                         choices=list(SKEIN_DICT.keys()) + [None],
