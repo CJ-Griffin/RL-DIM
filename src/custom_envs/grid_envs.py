@@ -206,7 +206,7 @@ class Grid(BaseEnv):
         self.goal_loc = goal_loc
         self.max_steps = max_steps
         self.dirt_value = dirt_value
-        self.time_step_pentalty = time_step_penalty
+        self.time_step_penalty = time_step_penalty
         self.elapsed_steps = 0
         self.should_calculate_baseline = should_calculate_baseline
 
@@ -219,7 +219,7 @@ class Grid(BaseEnv):
         self.baseline_grid_t = None
         self.baseline_grid_tp1 = None
 
-        self.action_space = gym.spaces.Discrete(5)
+        self.action_space = gym.spaces.Discrete(6) # add action 5, "do nothing"
         self.observation_space = gym.spaces.Box(
             low=0,
             high=2,
@@ -339,12 +339,15 @@ class Grid(BaseEnv):
             self.baseline_env.step(4)
         self.elapsed_steps += 1
         s_t = self.grid.copy()
-        if action != 4:
+        if action < 4:
             dest = self._get_dest(action)
             is_interact = False
-        else:
+        elif action == 4:
             dest = None
             is_interact = True
+        elif action == 5: # the "do nothing" action: don't move, don't interact
+            dest = None
+            is_interact = False
         lost_sushi_penalty = 0
         # sushi_eaten = False
         if dest is not None:
@@ -411,9 +414,9 @@ class Grid(BaseEnv):
 
         obs = self._get_obs()
         spec_reward = (int(gets_dirt) * self.dirt_value) + \
-                      (-0.01 * (dest is None and not is_interact)) + \
+                      (-0.01 * (dest is None and not is_interact)) + \# TODO might have to change this now I've implemented do nothing?
                       (5 * has_won) + \
-                      (-self.time_step_pentalty) + \
+                      (-self.time_step_penalty) + \
                       (-lost_sushi_penalty)
         if destroys_vase:
             self.vases_smashed += 1

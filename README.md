@@ -40,13 +40,13 @@ pip install xxhash enquiries torchviz
 ## Running experiments
 To run experiments, use the following command structure:
 ```commandline
-python experiment_manager.py [experiment set] [additional arguments]
+python experiment_manager.py -e [experiment set] [additional arguments]
 ```
-Where `[experiment set]` is the name of the experiment you wish to run. These names correspond to keys in `SKEIN_DICT`, which is defined in `skein_definitions.py` and in the files in the 'more_skein_definitions' folder.
+Where `[experiment set]` is the name of the experiment you wish to run. Accepted experiment names correspond to keys in `SKEIN_DICT`, which is defined in `skein_definitions.py` and in the files in the 'more_skein_definitions' folder.
 
 ### Additional arguments
-* -p: When used and if is_parallel is set to True for the experiment, it enables parallel execution of experiments.
-* -t: Sets the number of episodes to 1000 and sets is_test to True for a quicker trial run of the experiment.
+* -p: When used, if `is_parallel` is set to True in the `TrainParams` for the experiment, enables parallel execution of experiments.
+* -t: Sets the number of episodes to 1000 and sets `is_test` to True for a quicker trial run of the experiment.
 
 ### Example
 The following trains a deep Q-learning agent in the Repulsion environment, for 100000 episodes, with discount factor of 0.95:

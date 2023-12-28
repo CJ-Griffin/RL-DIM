@@ -65,6 +65,17 @@ SKEIN_DICT = {
         )
     ],
 
+    "grid_do_nothing_test": [
+        TrainParams(
+            env_name="SimpleGrid",
+            agent_name="QLearner",
+            num_episodes=int(10),
+            gamma=0.95,
+            is_test=True,
+            should_render=True,
+            should_debug=True
+        )
+    ],
 
     # "temp": [
     #     TrainParams(
