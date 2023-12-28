@@ -1,5 +1,5 @@
 import copy
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, List
 import gym
 import numpy as np
 import emoji
@@ -436,7 +436,7 @@ class Grid(BaseEnv):
         self._recordings[episode_number] = self._im_history
         self._im_history = []
 
-    def get_recordings(self) -> dict[list[np.array]]:
+    def get_recordings(self) -> Dict[str, List[np.array]]:
         return self._recordings
 
     def init_dist_measure(self, dist_measure_name: str, mu: float, gamma: float):

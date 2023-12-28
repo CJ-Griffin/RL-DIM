@@ -40,7 +40,7 @@ pip install xxhash enquiries torchviz
 ## Running experiments
 To run experiments, use the following command structure:
 ```commandline
-python experimentmanager.py [experiment set] [additional arguments]
+python experiment_manager.py [experiment set] [additional arguments]
 ```
 Where `[experiment set]` is the name of the experiment you wish to run. These names correspond to keys in `SKEIN_DICT`, which is defined in `skein_definitions.py` and in the files in the 'more_skein_definitions' folder.
 

@@ -4,6 +4,10 @@ import datetime
 
 from tqdm import tqdm
 
+import sys
+gym_path = '/home/catherine/RL-DIM/gym'  # Path to the parent of the inner 'gym' folder
+sys.path.insert(0, gym_path)
+# print("Gym module path:", gym.__file__)
 import numpy as np
 import gym
 
@@ -87,20 +91,22 @@ def run_experiment(params: TrainParams, skein_id: str, experiment_name: str):
 
     recordings = env.get_recordings()
 
-    nept_log = init_neptune_log(params, skein_id, experiment_name)
-    for (key, val) in total_info.items():
-        if isinstance(val, list):
-            if len(val) > 1000:
-                val = reduce_res_freq(val)
-            for elem in val:
-                nept_log[key].log(elem)
-        else:
-            nept_log[key] = val
 
-    save_agent_to_neptune(agent, nept_log, -1)
-    if len(recordings) > 0:
-        save_recordings(nept_log, recordings)
-    nept_log.stop()
+    if not params.should_skip_neptune:
+        nept_log = init_neptune_log(params, skein_id, experiment_name)
+        for (key, val) in total_info.items():
+            if isinstance(val, list):
+                if len(val) > 1000:
+                    val = reduce_res_freq(val)
+                for elem in val:
+                    nept_log[key].log(elem)
+            else:
+                nept_log[key] = val
+
+        save_agent_to_neptune(agent, nept_log, -1)
+        if len(recordings) > 0:
+            save_recordings(nept_log, recordings)
+        nept_log.stop()
 
 
 def update_total_info(total_info, info, eval_info):

@@ -12,6 +12,8 @@ SKEIN_DICT = {
             alpha=0.1,
             mu=float(mu),
             dist_measure_name=D,
+            should_render=True, #modified
+            should_skip_neptune=True #modified
         )
         for D in (['perf', 'simple', "rgb"])
         for mu in ([0, 1, 2, 4, 8, 16, 32, 64])
