@@ -204,6 +204,7 @@ class Grid(BaseEnv):
         if goal_loc is None:
             goal_loc = (height - 1, width - 1)
         self.goal_loc = goal_loc
+        self.future_goal_state = None # will be defined by specific subclasses
         self.max_steps = max_steps
         self.dirt_value = dirt_value
         self.time_step_penalty = time_step_penalty
@@ -334,7 +335,9 @@ class Grid(BaseEnv):
             self._record_step()
         return self._get_obs()
 
-    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
+    def step(self, action: ActType, future_goal=False) -> Tuple[ObsType, float, bool, dict]:
+        # TODO modify this so it optimises for future_goal_state (not goal_loc) if env.should_future_task_reward is True and
+        # TODO if we're simulating the future goal state. maybe implement a flag for this?
         if self.should_calculate_baseline:
             self.baseline_env.step(4)
         self.elapsed_steps += 1
@@ -413,11 +416,20 @@ class Grid(BaseEnv):
             dist_reward = 0.0
 
         obs = self._get_obs()
+        # TODO might have to change spec_reward now I've implemented do nothing?
         spec_reward = (int(gets_dirt) * self.dirt_value) + \
-                      (-0.01 * (dest is None and not is_interact)) + \# TODO might have to change this now I've implemented do nothing?
+                      (-0.01 * (dest is None and not is_interact)) + \
                       (5 * has_won) + \
                       (-self.time_step_penalty) + \
                       (-lost_sushi_penalty)
+
+        if future_goal:
+            future_goal_reward = self._get_dist_term(s_t, self.future_goal_state)
+            return obs, future_goal_reward # don't calculate distance reward, just return the future goal reward
+            # TODO i think having done here might mess up the logic in step
+            # since done refers to reaching the actual goal state, not the future goal state
+            # but we want to loop until we've reached the future goal state
+
         if destroys_vase:
             self.vases_smashed += 1
         self._last_spec_reward = spec_reward
@@ -427,7 +439,55 @@ class Grid(BaseEnv):
                 "spec_reward": spec_reward}
         if self._is_recording:
             self._record_step()
+
         return obs, spec_reward + dist_reward, done, info
+
+    def save_state(self):
+        state_dict = {
+            "grid": self.grid.copy(),
+            "rob": Robot(self.rob.x, self.rob.y),
+            "rob_loc_history": self.rob_loc_history.copy(),
+            "elapsed_steps": self.elapsed_steps,
+            "vases_smashed": self.vases_smashed,
+            "sushi_eaten": self.sushi_eaten,
+            "s0_grid": self.s0_grid.copy(),
+            "goal_loc": self.goal_loc,
+            "future_goal_state": self.future_goal_state,
+            "_last_spec_reward": self._last_spec_reward,
+            "_last_dist_reward": self._last_dist_reward,
+            "dist_measure": self.dist_measure,
+            "mu": self.mu,
+            "gamma": self.gamma,
+            "init_door_state": self.init_door_state,
+            "baseline_env": self.baseline_env,  # handle with care
+            "baseline_grid_t": self.baseline_grid_t,
+            "baseline_grid_tp1": self.baseline_grid_tp1,
+            "action_space": self.action_space,
+            "observation_space": self.observation_space,
+            "player_init": self.player_init,
+            "height": self.height,
+            "width": self.width,
+            "should_calculate_baseline": self.should_calculate_baseline,
+            "_is_recording": self._is_recording,
+            "_im_history": self._im_history.copy(),
+            "_recordings": self._recordings.copy()
+        }
+        return state_dict
+
+    def load_state(self, state_dict):
+        for key, value in state_dict.items():
+            if isinstance(value, np.ndarray):
+                # Deep copy for numpy arrays
+                setattr(self, key, value.copy())
+            elif isinstance(value, list):
+                # Shallow copy for lists
+                setattr(self, key, value.copy())
+            elif key == 'rob':
+                # Special handling for complex objects like Robot
+                setattr(self, key, Robot(value.x, value.y))
+            else:
+                # Direct assignment for other types
+                setattr(self, key, value)
 
     def start_recording(self):
         assert not self._is_recording
@@ -712,6 +772,17 @@ class SimpleGrid(Grid):
     def __init__(self, height=10, width=16, player_init=(0, 0), goal_loc=None, max_steps=100):
         super().__init__(height, width, player_init, goal_loc, max_steps)
 
+        # hardcode in a goal state
+        self.future_goal_state = np.array([
+
+            ['#', '#', '#', '#', '#', '#'],
+            ['#', ' ', ' ', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', ' ', '#'],
+            ['#', ' ', ' ', ' ', ' ', '#'],
+            ['#', '#', '#', '#', '#', '#']
+
+        ], dtype=np.unicode_)
     def _get_object_locations_WDDV(self) -> (list, list, list, list):
         return [], [], *self._get_simple_dirts_and_vases()
 

@@ -14,6 +14,7 @@ def get_env(experiment_params: TrainParams) -> BaseEnv:
     env_name = experiment_params.env_name
     env_class = getattr(src.custom_envs, env_name)
     env = env_class()
+    print(f"env instance: {env}, type: {type(env)}")
     if issubclass(env_class, Grid):
         env.init_dist_measure(mu=experiment_params.mu,
                               dist_measure_name=experiment_params.dist_measure_name,
@@ -21,7 +22,6 @@ def get_env(experiment_params: TrainParams) -> BaseEnv:
     elif isinstance(env, Repulsion):
         env.init_gamma(experiment_params.gamma)
     return env
-
 
 def get_agent(env: BaseEnv, experiment_params: TrainParams) -> Agent:
     agent_name = experiment_params.agent_name
