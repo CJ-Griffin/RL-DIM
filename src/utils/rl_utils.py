@@ -7,19 +7,23 @@ import gym
 from src.agents import Agent
 import src.custom_envs
 from src.custom_envs import Grid, BaseEnv, Repulsion
+from src.custom_envs.counterfactual_env_wrapper import CounterfactualEnvWrapper
 from src.run_parameters import TrainParams
 
 
 def get_env(experiment_params: TrainParams) -> BaseEnv:
     env_name = experiment_params.env_name
-    env_class = getattr(src.custom_envs, env_name)
-    env = env_class()
-    if issubclass(env_class, Grid):
+    EnvClass = getattr(src.custom_envs, env_name)
+    env = CounterfactualEnvWrapper(EnvClass)
+
+    #print("!" * 1000)
+    if issubclass(EnvClass, Grid):
         env.init_dist_measure(mu=experiment_params.mu,
                               dist_measure_name=experiment_params.dist_measure_name,
                               gamma=experiment_params.gamma)
     elif isinstance(env, Repulsion):
         env.init_gamma(experiment_params.gamma)
+
     return env
 
 
