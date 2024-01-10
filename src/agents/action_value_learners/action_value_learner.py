@@ -29,7 +29,12 @@ class ActionValueLearner(Agent):
         assert state in self._state_space, (state, self._state_space)
 
         self._init_Q_s(state)
-        if not self.is_eval_mode and 1 == np.random.binomial(1, self._epsilon):
+
+        if self.follow_baseline_policy:
+            return 5
+        # 5 is the do nothing action in grid envs, TODO generalise for all environments
+        # TODO test if this works
+        elif not self.is_eval_mode and not self.follow_baseline_policy and 1 == np.random.binomial(1, self._epsilon):
             return self._action_space.sample()
         else:
             return self.get_greedy_action(state)

@@ -27,6 +27,7 @@ class TrainParams:
     should_profile: bool = False  # Experiment management
     is_test: bool = False  # Experiment management (will not do tqdm if not test)
     should_skip_neptune: bool = False  # Experiment management
+    should_future_task_reward: bool = False  # Experiment management (implements Krakovna's auxiliary reward)
 
     def __post_init__(self):
         self.num_episodes = force_integer(self.num_episodes)

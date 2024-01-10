@@ -52,6 +52,18 @@ SKEIN_DICT = {
         )
     ],
 
+    "future-task-test": [
+        TrainParams(
+            env_name="SimpleGrid",
+            agent_name="QLearner",
+            num_episodes=int(10),
+            gamma=0.9,
+            is_test=True,
+            should_render=True,
+            should_debug=True,
+            should_future_task_reward=True
+        )
+    ],
 
     "DQN-cont": [
         TrainParams(
@@ -65,6 +77,17 @@ SKEIN_DICT = {
         )
     ],
 
+    "grid-test": [
+        TrainParams(
+            env_name="SimpleGrid",
+            agent_name="QLearner",
+            num_episodes=int(10),
+            gamma=0.95,
+            is_test=True,
+            should_render=True,
+            should_debug=True
+        )
+    ],
 
     # "temp": [
     #     TrainParams(

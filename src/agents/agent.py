@@ -25,6 +25,9 @@ class Agent(ABC):
         self._unique_ID = "".join(list(np.random.choice(CHARS, size=20)))
         self.is_eval_mode = False
 
+        # adding baseline policy implementation
+        self.follow_baseline_policy = False
+
     @abstractmethod
     def act(self, state):
         raise NotImplementedError
